@@ -45,8 +45,8 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Println("you must provide at least two argument.\n")
-		fmt.Fprintln(flag.CommandLine.Output(), usage)
+		fmt.Printf("you must provide at least two argument.\n\n")
+		fmt.Fprint(flag.CommandLine.Output(), usage)
 		os.Exit(1)
 	}
 
