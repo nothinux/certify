@@ -28,41 +28,45 @@ see [pkg.go.dev](https://pkg.go.dev/github.com/nothinux/go-ps)
 package main
 
 import (
-    "log"
-    "fmt"
-    "github.com/nothinux/certify"
+	"crypto/x509/pkix"
+	"log"
+	"os"
+	"time"
+
+	"github.com/nothinux/certify"
 )
 
 func main() {
-    p, err := certify.GetPrivateKey()
-    if err != nil {
-        log.Fatal(err)
-    }
+	p, err := certify.GetPrivateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    if err := os.WriteFile("CA-key.pem", []byte(p.String()), 0640); err != nil {
-        log.Fatal(err)
-    }
-  
-    // create ca
-    template := certify.Certificate{
-        Subject: pkix.Name{
-            Organization: []string{"certify"},
-        },
-        NotBefore: time.Now(),
-        NotAfter:  time.Now().Add(8766 * time.Hour),
-        IsCA:      true,
-    }
+	if err := os.WriteFile("CA-key.pem", []byte(p.String()), 0640); err != nil {
+		log.Fatal(err)
+	}
 
-    caCert, err := template.GetCertificate(p)
-    if err != nil {
-        log.Fatal(err)
-    }
-  
-    if err := os.WriteFile("CA-cert.pem", []byte(caCert.String()), 0640); err != nil {
-        log.Fatal(err)
-    }
-    
+	// create ca
+	template := certify.Certificate{
+		Subject: pkix.Name{
+			Organization: []string{"certify"},
+		},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().Add(8766 * time.Hour),
+		IsCA:      true,
+	}
+
+	caCert, err := template.GetCertificate(p.PrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := os.WriteFile("CA-cert.pem", []byte(caCert.String()), 0640); err != nil {
+		log.Fatal(err)
+	}
+
 }
+
 ```
 
 ## License
