@@ -8,7 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"math/big"
 	"net"
 	"time"
@@ -29,7 +28,7 @@ type Result struct {
 	Certificate []byte
 }
 
-// getSerial returns serial and an error
+// GetSerial returns serial and an error
 func GetSerial() (*big.Int, error) {
 	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
@@ -39,7 +38,7 @@ func GetSerial() (*big.Int, error) {
 	return serial, nil
 }
 
-// setTemplate set template for x509.Certificate from given Certificate struct
+// SetTemplate set template for x509.Certificate from given Certificate struct
 func (c *Certificate) SetTemplate(serial *big.Int) x509.Certificate {
 	return x509.Certificate{
 		SerialNumber: serial,
@@ -59,7 +58,10 @@ func (c *Certificate) SetTemplate(serial *big.Int) x509.Certificate {
 
 // GetCertificate generate certificate and returns it in Result struct
 func (c *Certificate) GetCertificate(pkey *ecdsa.PrivateKey) (*Result, error) {
-	serial, _ := GetSerial()
+	serial, err := GetSerial()
+	if err != nil {
+		return nil, err
+	}
 
 	template := c.SetTemplate(serial)
 
@@ -73,7 +75,7 @@ func (c *Certificate) GetCertificate(pkey *ecdsa.PrivateKey) (*Result, error) {
 
 	der, err := x509.CreateCertificate(rand.Reader, &template, c.Parent, &pkey.PublicKey, c.ParentPrivateKey)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	return &Result{Certificate: der}, nil
