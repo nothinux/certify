@@ -11,23 +11,4 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/gatekeeper-cli/
-archives:
-  - format: zip
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}"
-    files:
-    - none*
-
-releases:
-  name_template: "{{.ProjectName}}-{{.Version}}"
-
-checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+    main: ./cmd/certify/
