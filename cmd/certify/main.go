@@ -8,11 +8,17 @@ import (
 )
 
 const usage = `Usage of certify:
+certify [flag] [ip-or-dns-san] [cn:default certify]
 
 $ certify -init
 ⚡️ Initialize new CA Certificate and Key
 
 $ certify server.local 172.17.0.1
+⚡️ Generate certificate with alt name server.local and 172.17.0.1
+
+Also you can set subject common name by providing cn:yourcn
+
+$ certify cn:web-server
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
 
 You must create new CA by run -init before you can create certificate.
@@ -37,7 +43,7 @@ func main() {
 		}
 		fmt.Println("CA private key file generated", caKeyPath)
 
-		if err := generateCA(pkey.PrivateKey, caPath); err != nil {
+		if err := generateCA(pkey.PrivateKey, os.Args[2], caPath); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("CA certificate file generated", caPath)

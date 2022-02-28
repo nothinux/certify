@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/nothinux/certify"
@@ -22,10 +23,11 @@ func generatePrivateKey(path string) (*certify.PrivateKey, error) {
 	return p, store(p.String(), path)
 }
 
-func generateCA(pkey *ecdsa.PrivateKey, path string) error {
+func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 	template := certify.Certificate{
 		Subject: pkix.Name{
 			Organization: []string{"certify"},
+			CommonName:   parseCN(cn),
 		},
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().Add(8766 * time.Hour),
@@ -41,7 +43,7 @@ func generateCA(pkey *ecdsa.PrivateKey, path string) error {
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
-	iplist, dnsnames := parseAltNames(args)
+	iplist, dnsnames, cn := parseAltNames(args)
 
 	parentKey, err := getCAPrivateKey()
 	if err != nil {
@@ -56,6 +58,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 	template := certify.Certificate{
 		Subject: pkix.Name{
 			Organization: []string{"certify"},
+			CommonName:   cn,
 		},
 		NotBefore:        time.Now(),
 		NotAfter:         time.Now().Add(8766 * time.Hour),
@@ -82,7 +85,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 }
 
 func getFilename(args []string, key bool) string {
-	iplist, dnsnames := parseAltNames(args)
+	iplist, dnsnames, cn := parseAltNames(args)
 
 	var ext string
 	var certPath string
@@ -95,8 +98,10 @@ func getFilename(args []string, key bool) string {
 
 	if len(dnsnames) != 0 {
 		certPath = fmt.Sprintf("%s%s", dnsnames[0], ext)
-	} else {
+	} else if len(iplist) != 0 {
 		certPath = fmt.Sprintf("%s%s", iplist[0], ext)
+	} else {
+		certPath = fmt.Sprintf("%s%s", cn, ext)
 	}
 
 	return certPath
@@ -131,19 +136,33 @@ func getCACert() (*x509.Certificate, error) {
 }
 
 // parseAltNames returns parsed net.IP and DNS in slice
-func parseAltNames(args []string) ([]net.IP, []string) {
+func parseAltNames(args []string) ([]net.IP, []string, string) {
 	var iplist []net.IP
 	var dnsnames []string
+	var cn string
 
 	for _, arg := range args[1:] {
 		if net.ParseIP(arg) != nil {
 			iplist = append(iplist, net.ParseIP(arg))
+		} else if strings.Contains(arg, "cn:") {
+			cn = parseCN(arg)
 		} else {
 			dnsnames = append(dnsnames, arg)
 		}
 	}
 
-	return iplist, dnsnames
+	return iplist, dnsnames, cn
+}
+
+func parseCN(cn string) string {
+	if strings.Contains(cn, "cn:") {
+		s := strings.Split(cn, ":")
+		if s[1] != "" {
+			return s[1]
+		}
+	}
+
+	return "certify"
 }
 
 // store write content to given path and returns an error
