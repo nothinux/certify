@@ -9,6 +9,9 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
+      - darwin
+      - freebsd
+      - windows
     goarch:
       - amd64
     main: ./cmd/certify/
