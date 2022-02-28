@@ -19,7 +19,7 @@ $ certify server.local 172.17.0.1
 Also you can set subject common name by providing cn:yourcn
 
 $ certify cn:web-server
-⚡️ Generate certificate with alt name server.local and 172.17.0.1
+⚡️ Generate certificate with common name web-server
 
 You must create new CA by run -init before you can create certificate.
 `
