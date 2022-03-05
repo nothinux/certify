@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 const usage = `Usage of certify:
@@ -43,7 +44,15 @@ func main() {
 		}
 		fmt.Println("CA private key file generated", caKeyPath)
 
-		if err := generateCA(pkey.PrivateKey, os.Args[2], caPath); err != nil {
+		var cn string
+
+		if len(os.Args) > 2 {
+			if strings.Contains(os.Args[2], "cn:") {
+				cn = os.Args[2]
+			}
+		}
+
+		if err := generateCA(pkey.PrivateKey, cn, caPath); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("CA certificate file generated", caPath)
