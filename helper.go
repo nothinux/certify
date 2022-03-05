@@ -12,11 +12,11 @@ func parseExtKeyUsage(ekus []x509.ExtKeyUsage) string {
 
 	for _, eku := range ekus {
 		if eku == x509.ExtKeyUsageAny {
-			extku = append(extku, "ExtKeyUsageAny")
+			extku = append(extku, "Any Usage")
 		} else if eku == x509.ExtKeyUsageClientAuth {
-			extku = append(extku, "ExtKeyUsageClientAuth")
+			extku = append(extku, "TLS Web Client Authentication")
 		} else if eku == x509.ExtKeyUsageServerAuth {
-			extku = append(extku, "ExtKeyUsageServerAuth")
+			extku = append(extku, "TLS Web Server Authentication")
 		} else {
 			extku = append(extku, strconv.Itoa(int(eku)))
 		}
