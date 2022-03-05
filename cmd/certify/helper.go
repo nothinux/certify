@@ -160,6 +160,10 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
 		}
 	}
 
+	if expiry.IsZero() {
+		expiry = parseExpiry("")
+	}
+
 	return iplist, dnsnames, cn, expiry
 }
 
