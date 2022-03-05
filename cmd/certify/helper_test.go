@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParseAltNames(t *testing.T) {
+func TestParseArgs(t *testing.T) {
 	tests := []struct {
 		Name        string
 		Args        []string
@@ -50,7 +50,7 @@ func TestParseAltNames(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			ips, dns, cn := parseAltNames(tt.Args)
+			ips, dns, cn, _ := parseArgs(tt.Args)
 
 			if len(tt.expectedIP) != 0 {
 				for i, ip := range ips {

@@ -9,13 +9,16 @@ import (
 )
 
 const usage = `Usage of certify:
-certify [flag] [ip-or-dns-san] [cn:default certify]
+certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
 
 $ certify -init
 ⚡️ Initialize new CA Certificate and Key
 
 $ certify server.local 172.17.0.1
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
+
+$ certify server.local expiry:1d
+⚡️ Generate certificate expiry within 1 day
 
 Also you can set subject common name by providing cn:yourcn
 

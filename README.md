@@ -15,6 +15,9 @@ $ certify -init
 $ certify server.local 172.17.0.1
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
 
+$ certify server.local expiry:1d
+⚡️ Generate certificate expiry within 1 day
+
 $ certify cn:web-server
 ⚡️ Generate certificate with common name web-server
 ```

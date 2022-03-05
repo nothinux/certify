@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
-	iplist, dnsnames, cn := parseAltNames(args)
+	iplist, dnsnames, cn, expiry := parseArgs(args)
 
 	parentKey, err := getCAPrivateKey()
 	if err != nil {
@@ -61,7 +62,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 			CommonName:   cn,
 		},
 		NotBefore:        time.Now(),
-		NotAfter:         time.Now().Add(8766 * time.Hour),
+		NotAfter:         expiry,
 		IPAddress:        iplist,
 		DNSNames:         dnsnames,
 		IsCA:             false,
@@ -88,7 +89,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 // first it will check dnsnames, if nil, then check iplist, if iplist nil too
 // it will check common name
 func getFilename(args []string, key bool) string {
-	iplist, dnsnames, cn := parseAltNames(args)
+	iplist, dnsnames, cn, _ := parseArgs(args)
 
 	var ext string
 	var path string
@@ -138,11 +139,12 @@ func getCACert() (*x509.Certificate, error) {
 	return c, nil
 }
 
-// parseAltNames returns parsed net.IP, DNS and Common Name in slice format
-func parseAltNames(args []string) ([]net.IP, []string, string) {
+// parseAltNames returns parsed net.IP, DNS, Common Name and expiry date in slice format
+func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
 	var iplist []net.IP
 	var dnsnames []string
 	var cn string
+	var expiry time.Time
 
 	for _, arg := range args[1:] {
 		if net.ParseIP(arg) != nil {
@@ -151,12 +153,14 @@ func parseAltNames(args []string) ([]net.IP, []string, string) {
 			if cn == "" {
 				cn = parseCN(arg)
 			}
+		} else if strings.Contains(arg, "expiry:") {
+			expiry = parseExpiry(arg)
 		} else {
 			dnsnames = append(dnsnames, arg)
 		}
 	}
 
-	return iplist, dnsnames, cn
+	return iplist, dnsnames, cn, expiry
 }
 
 func parseCN(cn string) string {
@@ -168,6 +172,31 @@ func parseCN(cn string) string {
 	}
 
 	return "certify"
+}
+
+func parseExpiry(expiry string) time.Time {
+	format := make(map[string]time.Duration)
+	format["s"] = time.Second
+	format["m"] = time.Minute
+	format["h"] = time.Hour
+	format["d"] = 24 * time.Hour
+
+	if strings.Contains(expiry, "expiry:") {
+		s := strings.Split(expiry, ":")
+
+		for f, d := range format {
+			if strings.HasSuffix(s[1], f) {
+				i, err := strconv.Atoi(strings.TrimSuffix(s[1], f))
+				if err != nil {
+					return time.Now().Add(8766 * time.Hour)
+				}
+
+				return time.Now().Add(time.Duration(i) * d)
+			}
+		}
+	}
+
+	return time.Now().Add(8766 * time.Hour)
 }
 
 // store write content to given path and returns an error
