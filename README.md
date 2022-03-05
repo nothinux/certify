@@ -1,14 +1,16 @@
 # Certify
 [![Go Report Card](https://goreportcard.com/badge/github.com/nothinux/certify)](https://goreportcard.com/report/github.com/nothinux/certify)  ![test status](https://github.com/nothinux/go-ps/actions/workflows/test.yml/badge.svg?branch=master)  
-Certify can be used for creating a private CA (Certificate Authority) and issuing certificates signed by the pre-created CA. Issued certificate will be active for 1 year.
+Certify can be used for creating a private CA (Certificate Authority) and issuing certificates signed by the pre-created CA.
 
-Also, you can set subject alternative names (IP SAN and DNS SAN) and common name for the created certificate.
+Also, you can set subject alternative names (IP SAN and DNS SAN), common name and expiry date for the created certificate.
 
 ## Installation
 Download in the [release page](https://github.com/nothinux/certify/releases)
 
 ## Usage
 ```
+certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
+
 $ certify -init
 ⚡️ Initialize new CA Certificate and Key
 
