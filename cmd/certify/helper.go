@@ -84,11 +84,14 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 	return err
 }
 
+// getFilename returns path based on given args
+// first it will check dnsnames, if nil, then check iplist, if iplist nil too
+// it will check common name
 func getFilename(args []string, key bool) string {
 	iplist, dnsnames, cn := parseAltNames(args)
 
 	var ext string
-	var certPath string
+	var path string
 
 	if key {
 		ext = "-key.pem"
@@ -97,14 +100,14 @@ func getFilename(args []string, key bool) string {
 	}
 
 	if len(dnsnames) != 0 {
-		certPath = fmt.Sprintf("%s%s", dnsnames[0], ext)
+		path = fmt.Sprintf("%s%s", dnsnames[0], ext)
 	} else if len(iplist) != 0 {
-		certPath = fmt.Sprintf("%s%s", iplist[0], ext)
+		path = fmt.Sprintf("%s%s", iplist[0], ext)
 	} else {
-		certPath = fmt.Sprintf("%s%s", cn, ext)
+		path = fmt.Sprintf("%s%s", cn, ext)
 	}
 
-	return certPath
+	return path
 }
 
 func getCAPrivateKey() (*ecdsa.PrivateKey, error) {
@@ -135,7 +138,7 @@ func getCACert() (*x509.Certificate, error) {
 	return c, nil
 }
 
-// parseAltNames returns parsed net.IP and DNS in slice
+// parseAltNames returns parsed net.IP, DNS and Common Name in slice format
 func parseAltNames(args []string) ([]net.IP, []string, string) {
 	var iplist []net.IP
 	var dnsnames []string
@@ -145,7 +148,9 @@ func parseAltNames(args []string) ([]net.IP, []string, string) {
 		if net.ParseIP(arg) != nil {
 			iplist = append(iplist, net.ParseIP(arg))
 		} else if strings.Contains(arg, "cn:") {
-			cn = parseCN(arg)
+			if cn == "" {
+				cn = parseCN(arg)
+			}
 		} else {
 			dnsnames = append(dnsnames, arg)
 		}
