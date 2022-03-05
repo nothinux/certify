@@ -22,6 +22,11 @@ $ certify server.local expiry:1d
 
 $ certify cn:web-server
 ⚡️ Generate certificate with common name web-server
+
+Also, you can see information from created certificate
+
+$ certify -show server.local.pem
+⚡️ Show information from certificate with name server.local.pem
 ```
 
 ## Use Certify as library

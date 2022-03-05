@@ -2,6 +2,7 @@ package certify
 
 import (
 	"crypto/x509/pkix"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -66,4 +67,38 @@ func TestGetCertificate(t *testing.T) {
 
 	})
 
+}
+
+func TestCertInfo(t *testing.T) {
+	pkey, err := GetPrivateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	template := Certificate{
+		Subject: pkix.Name{
+			Organization: []string{"certify"},
+			CommonName:   "certify",
+		},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().Add(24 * time.Hour),
+		IsCA:      true,
+		DNSNames:  []string{"github.com"},
+		IPAddress: []net.IP{
+			net.ParseIP("127.0.0.1"),
+		},
+	}
+
+	res, err := template.GetCertificate(pkey.PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cert, err := ParseCertificate([]byte(res.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := CertInfo(cert)
+	fmt.Println(s)
 }

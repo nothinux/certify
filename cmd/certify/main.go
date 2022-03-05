@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/nothinux/certify"
 )
 
 const usage = `Usage of certify:
@@ -17,13 +19,16 @@ $ certify -init
 $ certify server.local 172.17.0.1
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
 
+$ certify cn:web-server
+⚡️ Generate certificate with common name web-server
+
 $ certify server.local expiry:1d
 ⚡️ Generate certificate expiry within 1 day
 
-Also you can set subject common name by providing cn:yourcn
+Also, you can see information from created certificate
 
-$ certify cn:web-server
-⚡️ Generate certificate with common name web-server
+$ certify -show server.local.pem
+⚡️ Show information from certificate with name server.local.pem
 
 You must create new CA by run -init before you can create certificate.
 `
@@ -35,6 +40,7 @@ var (
 
 func main() {
 	init := flag.Bool("init", false, "initialize new CA Certificate and Key")
+	show := flag.Bool("show", false, "show information about certificate")
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
@@ -59,6 +65,26 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println("CA certificate file generated", caPath)
+		return
+	}
+
+	if *show {
+		if len(os.Args) < 3 {
+			fmt.Printf("you must provide certificate path.\n")
+			os.Exit(1)
+		}
+
+		f, err := os.ReadFile(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		cert, err := certify.ParseCertificate(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%s", certify.CertInfo(cert))
 		return
 	}
 
