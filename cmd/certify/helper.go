@@ -227,7 +227,7 @@ func tlsDial(host string) (*x509.Certificate, error) {
 	defer net.Close()
 
 	certChain := net.ConnectionState().PeerCertificates
-	cert := certChain[len(certChain)-1]
+	cert := certChain[0]
 
 	return cert, nil
 }
