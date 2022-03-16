@@ -10,7 +10,13 @@ import (
 	"github.com/nothinux/certify"
 )
 
-const usage = `Usage of certify:
+const usage = `             _   _ ___     
+ ___ ___ ___| |_|_|  _|_ _ 
+|  _| -_|  _|  _| |  _| | |
+|___|___|_| |_| |_|_| |_  |
+                      |___|
+
+Usage of certify:
 certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
 
 $ certify -init
@@ -39,16 +45,23 @@ You must create new CA by run -init before you can create certificate.
 var (
 	caPath    = "ca-cert.pem"
 	caKeyPath = "ca-key.pem"
+	Version   = "No version provided"
 )
 
 func main() {
 	init := flag.Bool("init", false, "initialize new CA Certificate and Key")
 	show := flag.Bool("show", false, "show information about certificate")
 	connect := flag.Bool("connect", false, "show information about certificate on remote host")
+	ver := flag.Bool("version", false, "see program version")
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
 	flag.Parse()
+
+	if *ver {
+		fmt.Printf("Certifify version v%s\n", Version)
+		return
+	}
 
 	if *init {
 		pkey, err := generatePrivateKey(caKeyPath)
