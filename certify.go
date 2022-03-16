@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -114,13 +115,6 @@ func ParseCertificate(cert []byte) (*x509.Certificate, error) {
 func CertInfo(cert *x509.Certificate) string {
 	var buf bytes.Buffer
 
-	if cert.PublicKeyAlgorithm != x509.ECDSA {
-		buf.WriteString(fmt.Sprintf(
-			"Currently certify only support ECDSA Certificate, this certificate is %v Certificate\n\n",
-			cert.PublicKeyAlgorithm.String()),
-		)
-	}
-
 	buf.WriteString("Certificate\n")
 	buf.WriteString(fmt.Sprintf("%4sData:\n", ""))
 	buf.WriteString(fmt.Sprintf("%8sVersion: %d\n", "", cert.Version))
@@ -135,13 +129,19 @@ func CertInfo(cert *x509.Certificate) string {
 
 	buf.WriteString(fmt.Sprintf("%8sSubject: %v\n", "", strings.Replace(cert.Subject.String(), ",", ", ", -1)))
 
+	buf.WriteString(fmt.Sprintf("%8sSubject Public Key Info:\n", ""))
+	buf.WriteString(fmt.Sprintf("%12sPublic Key Algorithm: %v\n", "", cert.PublicKeyAlgorithm))
 	if cert.PublicKeyAlgorithm == x509.ECDSA {
-		buf.WriteString(fmt.Sprintf("%8sSubject Public Key Info:\n", ""))
-		buf.WriteString(fmt.Sprintf("%12sPublic Key Algorithm: %v\n", "", cert.PublicKeyAlgorithm))
-
 		if ecdsakey, ok := cert.PublicKey.(*ecdsa.PublicKey); ok {
 			buf.WriteString(fmt.Sprintf("%16sPublic Key: (%d bit)\n", "", ecdsakey.Params().BitSize))
 			buf.WriteString(fmt.Sprintf("%16sNIST Curve: %s\n", "", ecdsakey.Params().Name))
+		}
+	}
+
+	if cert.PublicKeyAlgorithm == x509.RSA {
+		if rsakey, ok := cert.PublicKey.(*rsa.PublicKey); ok {
+			buf.WriteString(fmt.Sprintf("%16sRSA Public-Key: (%d bit)\n", "", rsakey.N.BitLen()))
+			buf.WriteString(fmt.Sprintf("%16sExponent: %d (%#x)\n", "", rsakey.E, rsakey.E))
 		}
 	}
 
