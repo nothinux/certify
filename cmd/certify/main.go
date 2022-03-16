@@ -28,7 +28,10 @@ $ certify server.local expiry:1d
 Also, you can see information from created certificate
 
 $ certify -show server.local.pem
-⚡️ Show information from certificate with name server.local.pem
+⚡️ Show certificate information with filename server.local.pem
+
+$ certify -connect google.com:443
+⚡️ Show certificate information from remote host
 
 You must create new CA by run -init before you can create certificate.
 `
@@ -41,6 +44,7 @@ var (
 func main() {
 	init := flag.Bool("init", false, "initialize new CA Certificate and Key")
 	show := flag.Bool("show", false, "show information about certificate")
+	connect := flag.Bool("connect", false, "show information about certificate on remote host")
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
@@ -85,6 +89,21 @@ func main() {
 		}
 
 		fmt.Printf("%s", certify.CertInfo(cert))
+		return
+	}
+
+	if *connect {
+		if len(os.Args) < 3 {
+			fmt.Printf("you must provide remote host.\n")
+			os.Exit(1)
+		}
+
+		result, err := tlsDial(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(certify.CertInfo(result))
 		return
 	}
 

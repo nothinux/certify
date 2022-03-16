@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"errors"
@@ -212,4 +213,21 @@ func isExist(path string) bool {
 	_, err := os.Stat(path)
 
 	return !errors.Is(err, os.ErrNotExist)
+}
+
+func tlsDial(host string) (*x509.Certificate, error) {
+	dialer := &net.Dialer{
+		Timeout: 5 * time.Second,
+	}
+
+	net, err := tls.DialWithDialer(dialer, "tcp", host, &tls.Config{})
+	if err != nil {
+		return nil, err
+	}
+	defer net.Close()
+
+	certChain := net.ConnectionState().PeerCertificates
+	cert := certChain[len(certChain)-1]
+
+	return cert, nil
 }

@@ -26,7 +26,10 @@ $ certify cn:web-server
 Also, you can see information from created certificate
 
 $ certify -show server.local.pem
-⚡️ Show information from certificate with name server.local.pem
+⚡️ Show certificate information with filename server.local.pem
+
+$ certify -connect google.com:443
+⚡️ Show certificate information from remote host
 ```
 
 ## Use Certify as library

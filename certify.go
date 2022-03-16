@@ -114,6 +114,13 @@ func ParseCertificate(cert []byte) (*x509.Certificate, error) {
 func CertInfo(cert *x509.Certificate) string {
 	var buf bytes.Buffer
 
+	if cert.PublicKeyAlgorithm != x509.ECDSA {
+		buf.WriteString(fmt.Sprintf(
+			"Currently certify only support ECDSA Certificate, this certificate is %v Certificate\n\n",
+			cert.PublicKeyAlgorithm.String()),
+		)
+	}
+
 	buf.WriteString("Certificate\n")
 	buf.WriteString(fmt.Sprintf("%4sData:\n", ""))
 	buf.WriteString(fmt.Sprintf("%8sVersion: %d\n", "", cert.Version))
