@@ -6,8 +6,10 @@ import (
 	"log"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/nothinux/certify"
+	"golang.org/x/term"
 )
 
 const usage = `             _   _ ___     
@@ -51,8 +53,9 @@ var (
 func main() {
 	init := flag.Bool("init", false, "initialize new CA Certificate and Key")
 	show := flag.Bool("show", false, "show information about certificate")
-	connect := flag.Bool("connect", false, "show information about certificate on remote host")
 	ver := flag.Bool("version", false, "see program version")
+	connect := flag.Bool("connect", false, "show information about certificate on remote host")
+	epkcs12 := flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
@@ -117,6 +120,35 @@ func main() {
 		}
 
 		fmt.Println(certify.CertInfo(result))
+		return
+	}
+
+	if *epkcs12 {
+		if len(os.Args) < 5 {
+			fmt.Println("you must provide [key-path] [cert-path] and [ca-path]")
+			os.Exit(1)
+		}
+
+		fmt.Print("enter password: ")
+		bytePass, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pfxData, err := getPfxData(
+			os.Args[2],
+			os.Args[3],
+			os.Args[4],
+			string(bytePass),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := os.WriteFile("client.p12", pfxData, 0644); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("\ncertificate exporter to client.p12")
 		return
 	}
 

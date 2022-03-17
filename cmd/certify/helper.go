@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/nothinux/certify"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 func generatePrivateKey(path string) (*certify.PrivateKey, error) {
@@ -113,7 +115,16 @@ func getFilename(args []string, key bool) string {
 }
 
 func getCAPrivateKey() (*ecdsa.PrivateKey, error) {
-	f, err := os.ReadFile("ca-key.pem")
+	pkey, err := readPrivateKeyFile("ca-key.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	return pkey, nil
+}
+
+func readPrivateKeyFile(path string) (*ecdsa.PrivateKey, error) {
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +138,16 @@ func getCAPrivateKey() (*ecdsa.PrivateKey, error) {
 }
 
 func getCACert() (*x509.Certificate, error) {
-	f, err := os.ReadFile("ca-cert.pem")
+	c, err := readCertificateFile("ca-cert.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func readCertificateFile(path string) (*x509.Certificate, error) {
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +158,33 @@ func getCACert() (*x509.Certificate, error) {
 	}
 
 	return c, nil
+}
+
+func getPfxData(pkey, cert, caCert, password string) ([]byte, error) {
+	p, err := readPrivateKeyFile(pkey)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := readCertificateFile(cert)
+	if err != nil {
+		return nil, err
+	}
+
+	ca, err := readCertificateFile(caCert)
+	if err != nil {
+		return nil, err
+	}
+
+	pfxData, err := pkcs12.Encode(
+		rand.Reader, p, c, []*x509.Certificate{ca}, password,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return pfxData, nil
 }
 
 // parseAltNames returns parsed net.IP, DNS, Common Name and expiry date in slice format
