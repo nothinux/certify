@@ -24,6 +24,8 @@ certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
 $ certify -init
 ⚡️ Initialize new CA Certificate and Key
 
+You must create new CA by run -init before you can create certificate.
+
 $ certify server.local 172.17.0.1
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
 
@@ -33,7 +35,7 @@ $ certify cn:web-server
 $ certify server.local expiry:1d
 ⚡️ Generate certificate expiry within 1 day
 
-Also, you can see information from created certificate
+Also, you can see information from certificate
 
 $ certify -show server.local.pem
 ⚡️ Show certificate information with filename server.local.pem
@@ -41,21 +43,28 @@ $ certify -show server.local.pem
 $ certify -connect google.com:443
 ⚡️ Show certificate information from remote host
 
-You must create new CA by run -init before you can create certificate.
+Export certificate and private key file to pkcs12 format
+$ certify -export-p12 cert.pem cert-key.pem ca-cert.pem
+⚡️ Generate client.p12 pem file containing certificate, private key and ca certificate
+
+Verify private key matches a certificate
+$ certify -match cert-key.pem cert.pem
+⚡️ verify cert-key.pem and cert.pem has same public key
 `
 
 var (
-	caPath    = "ca-cert.pem"
-	caKeyPath = "ca-key.pem"
-	Version   = "No version provided"
+	caPath     = "ca-cert.pem"
+	caKeyPath  = "ca-key.pem"
+	Version    = "No version provided"
+	initialize = flag.Bool("init", false, "initialize new CA Certificate and Key")
+	show       = flag.Bool("show", false, "show information about certificate")
+	match      = flag.Bool("match", false, "check if private key match with certificate")
+	ver        = flag.Bool("version", false, "see program version")
+	connect    = flag.Bool("connect", false, "show information about certificate on remote host")
+	epkcs12    = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 )
 
 func main() {
-	init := flag.Bool("init", false, "initialize new CA Certificate and Key")
-	show := flag.Bool("show", false, "show information about certificate")
-	ver := flag.Bool("version", false, "see program version")
-	connect := flag.Bool("connect", false, "show information about certificate on remote host")
-	epkcs12 := flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
@@ -66,7 +75,7 @@ func main() {
 		return
 	}
 
-	if *init {
+	if *initialize {
 		pkey, err := generatePrivateKey(caKeyPath)
 		if err != nil {
 			log.Fatal(err)
@@ -120,6 +129,28 @@ func main() {
 		}
 
 		fmt.Println(certify.CertInfo(result))
+		return
+	}
+
+	if *match {
+		if len(os.Args) < 4 {
+			fmt.Printf("you must provide pkey and cert.\n")
+			os.Exit(1)
+		}
+
+		pubkey, pubcert, err := matcher(os.Args[2], os.Args[3])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf(
+			"pubkey from %s:\n%s\n\npubkey from %s:\n%s\n✅ certificate and private key match\n",
+			os.Args[2],
+			pubkey,
+			os.Args[3],
+			pubcert,
+		)
+
 		return
 	}
 

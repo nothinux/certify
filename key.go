@@ -58,13 +58,3 @@ func ParsePrivateKey(pkey []byte) (*ecdsa.PrivateKey, error) {
 
 	return u, nil
 }
-
-// GetPublicKey returns public key from given private key
-func GetPublicKey(pkey []byte) (ecdsa.PublicKey, error) {
-	u, err := ParsePrivateKey(pkey)
-	if err != nil {
-		return ecdsa.PublicKey{}, err
-	}
-
-	return u.PublicKey, nil
-}

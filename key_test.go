@@ -26,13 +26,6 @@ func TestGetPrivateKey(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-
-	t.Run("Test get public key from created private key", func(t *testing.T) {
-		_, err := GetPublicKey([]byte(p.String()))
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
 }
 
 func TestParsePrivateKey(t *testing.T) {

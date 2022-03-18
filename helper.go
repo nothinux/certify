@@ -1,11 +1,31 @@
 package certify
 
 import (
+	"bytes"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"strconv"
 	"strings"
 )
+
+// GetPublicKey returns string of pem encoded structure from given public key
+func GetPublicKey(pub interface{}) (string, error) {
+	b, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return "", err
+	}
+
+	var w bytes.Buffer
+	if err := pem.Encode(&w, &pem.Block{
+		Type:  "PUBLIC_KEY",
+		Bytes: b,
+	}); err != nil {
+		return "", err
+	}
+
+	return w.String(), err
+}
 
 func parseExtKeyUsage(ekus []x509.ExtKeyUsage) string {
 	var extku []string

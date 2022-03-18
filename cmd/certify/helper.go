@@ -187,6 +187,40 @@ func getPfxData(pkey, cert, caCert, password string) ([]byte, error) {
 	return pfxData, nil
 }
 
+// comparePublicKey returns an error if public key from certificate and public
+// key from private key doesn't match
+func comparePublicKey(key *ecdsa.PrivateKey, cert *x509.Certificate) (string, string, error) {
+	pubkey, err := certify.GetPublicKey(&key.PublicKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	pubcert, err := certify.GetPublicKey(cert.PublicKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	if pubkey != pubcert {
+		return "", "", errors.New("private key doesn't match with given certificate")
+	}
+
+	return pubkey, pubcert, nil
+}
+
+func matcher(key, cert string) (string, string, error) {
+	k, err := readPrivateKeyFile(key)
+	if err != nil {
+		return "", "", err
+	}
+
+	c, err := readCertificateFile(cert)
+	if err != nil {
+		return "", "", err
+	}
+
+	return comparePublicKey(k, c)
+}
+
 // parseAltNames returns parsed net.IP, DNS, Common Name and expiry date in slice format
 func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
 	var iplist []net.IP
