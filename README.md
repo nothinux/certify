@@ -2,7 +2,15 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/nothinux/certify)](https://goreportcard.com/report/github.com/nothinux/certify)  ![test status](https://github.com/nothinux/go-ps/actions/workflows/test.yml/badge.svg?branch=master)  
 Certify can be used for creating a private CA (Certificate Authority) and issuing certificates signed by the pre-created CA.
 
-Also, you can set subject alternative names (IP SAN and DNS SAN), common name and expiry date for the created certificate.
+Certify is easy to use and can be used as an alternative to OpenSSL.
+
+## Feature
++ Create a certificate authorities
++ Issue certificate with custom common name, ip san, dns san, and expiry date
++ Show certificate information from file or remote host
++ Export certificate to PKCS12 format
++ Verify private key matches with certificate
+
 
 ## Installation
 Download in the [release page](https://github.com/nothinux/certify/releases)
@@ -50,7 +58,7 @@ You can also use certify as library for your Go application
 go get github.com/nothinux/certify
 ```
 ### Documentation
-see [pkg.go.dev](https://pkg.go.dev/github.com/nothinux/go-ps)
+see [pkg.go.dev](https://pkg.go.dev/github.com/nothinux/certify)
 ### Example
 #### Create Private Key and CA Certificates
 ``` go
