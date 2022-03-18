@@ -14,22 +14,32 @@ certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
 $ certify -init
 ⚡️ Initialize new CA Certificate and Key
 
+You must create new CA by run -init before you can create certificate.
+
 $ certify server.local 172.17.0.1
 ⚡️ Generate certificate with alt name server.local and 172.17.0.1
-
-$ certify server.local expiry:1d
-⚡️ Generate certificate expiry within 1 day
 
 $ certify cn:web-server
 ⚡️ Generate certificate with common name web-server
 
-Also, you can see information from created certificate
+$ certify server.local expiry:1d
+⚡️ Generate certificate expiry within 1 day
+
+Also, you can see information from certificate
 
 $ certify -show server.local.pem
 ⚡️ Show certificate information with filename server.local.pem
 
 $ certify -connect google.com:443
 ⚡️ Show certificate information from remote host
+
+Export certificate and private key file to pkcs12 format
+$ certify -export-p12 cert.pem cert-key.pem ca-cert.pem
+⚡️ Generate client.p12 pem file containing certificate, private key and ca certificate
+
+Verify private key matches a certificate
+$ certify -match cert-key.pem cert.pem
+⚡️ verify cert-key.pem and cert.pem has same public key
 ```
 
 ## Use Certify as library
