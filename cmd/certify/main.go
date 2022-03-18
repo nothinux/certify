@@ -71,7 +71,7 @@ func main() {
 	flag.Parse()
 
 	if *ver {
-		fmt.Printf("Certifify version v%s\n", Version)
+		fmt.Printf("Certify version v%s\n", Version)
 		return
 	}
 
@@ -164,6 +164,12 @@ func main() {
 		bytePass, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// verify if cert and key has same public key
+		_, _, err = matcher(os.Args[2], os.Args[3])
+		if err != nil {
+			log.Fatal("\n", err)
 		}
 
 		pfxData, err := getPfxData(
