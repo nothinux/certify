@@ -18,7 +18,7 @@ func GetPublicKey(pub interface{}) (string, error) {
 
 	var w bytes.Buffer
 	if err := pem.Encode(&w, &pem.Block{
-		Type:  "PUBLIC_KEY",
+		Type:  "PUBLIC KEY",
 		Bytes: b,
 	}); err != nil {
 		return "", err
