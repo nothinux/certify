@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -32,13 +31,33 @@ func parseExtKeyUsage(ekus []x509.ExtKeyUsage) string {
 
 	for _, eku := range ekus {
 		if eku == x509.ExtKeyUsageAny {
-			extku = append(extku, "Any Usage")
+			extku = append(extku, "Any Extended Key Usage")
 		} else if eku == x509.ExtKeyUsageClientAuth {
 			extku = append(extku, "TLS Web Client Authentication")
 		} else if eku == x509.ExtKeyUsageServerAuth {
 			extku = append(extku, "TLS Web Server Authentication")
-		} else {
-			extku = append(extku, strconv.Itoa(int(eku)))
+		} else if eku == x509.ExtKeyUsageCodeSigning {
+			extku = append(extku, "Code Signing")
+		} else if eku == x509.ExtKeyUsageEmailProtection {
+			extku = append(extku, "E-mail Protection")
+		} else if eku == x509.ExtKeyUsageIPSECEndSystem {
+			extku = append(extku, "IPSec End System")
+		} else if eku == x509.ExtKeyUsageIPSECTunnel {
+			extku = append(extku, "IPSec Tunnel")
+		} else if eku == x509.ExtKeyUsageIPSECUser {
+			extku = append(extku, "IPSec User")
+		} else if eku == x509.ExtKeyUsageTimeStamping {
+			extku = append(extku, "Time Stamping")
+		} else if eku == x509.ExtKeyUsageOCSPSigning {
+			extku = append(extku, "OCSP Signing")
+		} else if eku == x509.ExtKeyUsageMicrosoftServerGatedCrypto {
+			extku = append(extku, "Microsoft Server Gated Crypto")
+		} else if eku == x509.ExtKeyUsageNetscapeServerGatedCrypto {
+			extku = append(extku, "Netscape Server Gated Crypto")
+		} else if eku == x509.ExtKeyUsageMicrosoftCommercialCodeSigning {
+			extku = append(extku, "Microsoft Commercial Code Signing")
+		} else if eku == x509.ExtKeyUsageMicrosoftKernelCodeSigning {
+			extku = append(extku, "1.3.6.1.4.1.311.61.1.1")
 		}
 	}
 
