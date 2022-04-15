@@ -24,6 +24,7 @@ type Certificate struct {
 	IsCA             bool
 	Parent           *x509.Certificate
 	ParentPrivateKey interface{}
+	ExtentedKeyUsage []x509.ExtKeyUsage
 }
 
 type Result struct {
@@ -43,14 +44,11 @@ func GetSerial() (*big.Int, error) {
 // SetTemplate set template for x509.Certificate from given Certificate struct
 func (c *Certificate) SetTemplate(serial *big.Int) x509.Certificate {
 	return x509.Certificate{
-		SerialNumber: serial,
-		Subject:      c.Subject,
-		NotBefore:    c.NotBefore,
-		NotAfter:     c.NotAfter,
-		ExtKeyUsage: []x509.ExtKeyUsage{
-			x509.ExtKeyUsageClientAuth,
-			x509.ExtKeyUsageServerAuth,
-		},
+		SerialNumber:          serial,
+		Subject:               c.Subject,
+		NotBefore:             c.NotBefore,
+		NotAfter:              c.NotAfter,
+		ExtKeyUsage:           c.ExtentedKeyUsage,
 		IsCA:                  c.IsCA,
 		IPAddresses:           c.IPAddress,
 		DNSNames:              c.DNSNames,

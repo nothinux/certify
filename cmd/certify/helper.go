@@ -47,7 +47,7 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
-	iplist, dnsnames, cn, expiry := parseArgs(args)
+	iplist, dnsnames, cn, expiry, ekus := parseArgs(args)
 
 	parentKey, err := getCAPrivateKey()
 	if err != nil {
@@ -71,6 +71,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 		IsCA:             false,
 		Parent:           parent,
 		ParentPrivateKey: parentKey,
+		ExtentedKeyUsage: ekus,
 	}
 
 	cert, err := template.GetCertificate(pkey)
@@ -92,7 +93,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 // first it will check dnsnames, if nil, then check iplist, if iplist nil too
 // it will check common name
 func getFilename(args []string, key bool) string {
-	iplist, dnsnames, cn, _ := parseArgs(args)
+	iplist, dnsnames, cn, _, _ := parseArgs(args)
 
 	var ext string
 	var path string
@@ -222,11 +223,12 @@ func matcher(key, cert string) (string, string, error) {
 }
 
 // parseAltNames returns parsed net.IP, DNS, Common Name and expiry date in slice format
-func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
+func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.ExtKeyUsage) {
 	var iplist []net.IP
 	var dnsnames []string
 	var cn string
 	var expiry time.Time
+	var ekus []x509.ExtKeyUsage
 
 	for _, arg := range args[1:] {
 		if net.ParseIP(arg) != nil {
@@ -237,6 +239,8 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
 			}
 		} else if strings.Contains(arg, "expiry:") {
 			expiry = parseExpiry(arg)
+		} else if strings.Contains(arg, "eku:") {
+			ekus = parseEKU(arg)
 		} else {
 			dnsnames = append(dnsnames, arg)
 		}
@@ -246,7 +250,14 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time) {
 		expiry = parseExpiry("")
 	}
 
-	return iplist, dnsnames, cn, expiry
+	if len(ekus) == 0 {
+		ekus = []x509.ExtKeyUsage{
+			x509.ExtKeyUsageClientAuth,
+			x509.ExtKeyUsageServerAuth,
+		}
+	}
+
+	return iplist, dnsnames, cn, expiry, ekus
 }
 
 func parseCN(cn string) string {
@@ -258,6 +269,45 @@ func parseCN(cn string) string {
 	}
 
 	return "certify"
+}
+
+func parseEKU(ekus string) []x509.ExtKeyUsage {
+	var ExtKeyUsage []x509.ExtKeyUsage
+
+	for _, eku := range strings.Split(ekus, ",") {
+		e := strings.ToLower(eku)
+		if e == "serverauth" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageServerAuth)
+		} else if e == "clientauth" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageClientAuth)
+		} else if e == "any" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageAny)
+		} else if e == "codesigning" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageCodeSigning)
+		} else if e == "emailprotection" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageEmailProtection)
+		} else if e == "ipsecendsystem" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageIPSECEndSystem)
+		} else if e == "ipsectunnel" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageIPSECTunnel)
+		} else if e == "ipsecuser" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageIPSECUser)
+		} else if e == "timestamping" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageTimeStamping)
+		} else if e == "ocspsigning" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageOCSPSigning)
+		} else if e == "microsoftservergatedcrypto" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageMicrosoftServerGatedCrypto)
+		} else if e == "netscapeservergatedcrypto" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageNetscapeServerGatedCrypto)
+		} else if e == "microsoftcommercialcodesigning" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageMicrosoftCommercialCodeSigning)
+		} else if e == "microsoftkernelcodesigning" {
+			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageMicrosoftKernelCodeSigning)
+		}
+	}
+
+	return ExtKeyUsage
 }
 
 func parseExpiry(expiry string) time.Time {
