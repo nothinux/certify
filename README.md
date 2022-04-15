@@ -6,7 +6,7 @@ Certify is easy to use and can be used as an alternative to OpenSSL.
 
 ## Feature
 + Create a certificate authorities
-+ Issue certificate with custom common name, ip san, dns san, and expiry date
++ Issue certificate with custom common name, ip san, dns san, expiry date, and extended key usage
 + Show certificate information from file or remote host
 + Export certificate to PKCS12 format
 + Verify private key matches with certificate
@@ -32,6 +32,9 @@ $ certify cn:web-server
 
 $ certify server.local expiry:1d
 ⚡️ Generate certificate expiry within 1 day
+
+$ certify server.local eku:serverAuth,clientAuth
+⚡️ Generate certificate with extended key usage Server Auth and Client Auth
 
 Also, you can see information from certificate
 

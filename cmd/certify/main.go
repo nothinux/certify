@@ -36,6 +36,9 @@ $ certify cn:web-server
 $ certify server.local expiry:1d
 ⚡️ Generate certificate expiry within 1 day
 
+$ certify server.local eku:serverAuth,clientAuth
+⚡️ Generate certificate with extended key usage Server Auth and Client Auth
+
 Also, you can see information from certificate
 
 $ certify -read server.local.pem
