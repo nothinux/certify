@@ -296,6 +296,19 @@ func isExist(path string) bool {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
+func isPipe(stdin *os.File) error {
+	info, err := stdin.Stat()
+	if err != nil {
+		return err
+	}
+
+	if info.Mode()&os.ModeCharDevice != 0 || info.Size() != 0 {
+		return errors.New("can't read certificate, please provide certificate path or certificate content from stdin")
+	}
+
+	return nil
+}
+
 func tlsDial(host string) (*x509.Certificate, error) {
 	dialer := &net.Dialer{
 		Timeout: 5 * time.Second,

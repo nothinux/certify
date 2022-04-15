@@ -35,8 +35,8 @@ $ certify server.local expiry:1d
 
 Also, you can see information from certificate
 
-$ certify -show server.local.pem
-⚡️ Show certificate information with filename server.local.pem
+$ certify -read server.local.pem
+⚡️ Read certificate information from certificate with filename server.local.pem
 
 $ certify -connect google.com:443
 ⚡️ Show certificate information from remote host

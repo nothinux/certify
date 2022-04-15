@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -37,8 +38,8 @@ $ certify server.local expiry:1d
 
 Also, you can see information from certificate
 
-$ certify -show server.local.pem
-⚡️ Show certificate information with filename server.local.pem
+$ certify -read server.local.pem
+⚡️ Read certificate information from certificate with filename server.local.pem
 
 $ certify -connect google.com:443
 ⚡️ Show certificate information from remote host
@@ -57,7 +58,7 @@ var (
 	caKeyPath  = "ca-key.pem"
 	Version    = "No version provided"
 	initialize = flag.Bool("init", false, "initialize new CA Certificate and Key")
-	show       = flag.Bool("show", false, "show information about certificate")
+	read       = flag.Bool("read", false, "read information from certificate")
 	match      = flag.Bool("match", false, "check if private key match with certificate")
 	ver        = flag.Bool("version", false, "see program version")
 	connect    = flag.Bool("connect", false, "show information about certificate on remote host")
@@ -97,18 +98,27 @@ func main() {
 		return
 	}
 
-	if *show {
+	if *read {
+		var certByte []byte
+		var err error
+
 		if len(os.Args) < 3 {
-			fmt.Printf("you must provide certificate path.\n")
-			os.Exit(1)
+			if err := isPipe(os.Stdin); err != nil {
+				log.Fatal(err)
+			}
+
+			certByte, err = io.ReadAll(os.Stdin)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			certByte, err = os.ReadFile(os.Args[2])
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
-		f, err := os.ReadFile(os.Args[2])
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		cert, err := certify.ParseCertificate(f)
+		cert, err := certify.ParseCertificate(certByte)
 		if err != nil {
 			log.Fatal(err)
 		}
