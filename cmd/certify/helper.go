@@ -274,7 +274,9 @@ func parseCN(cn string) string {
 func parseEKU(ekus string) []x509.ExtKeyUsage {
 	var ExtKeyUsage []x509.ExtKeyUsage
 
-	for _, eku := range strings.Split(ekus, ",") {
+	parsedEku := strings.Split(strings.TrimLeft(ekus, "eku:"), ",")
+
+	for _, eku := range parsedEku {
 		e := strings.ToLower(eku)
 		if e == "serverauth" {
 			ExtKeyUsage = append(ExtKeyUsage, x509.ExtKeyUsageServerAuth)
