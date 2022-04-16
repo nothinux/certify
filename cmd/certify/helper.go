@@ -261,11 +261,9 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.Ext
 }
 
 func parseCN(cn string) string {
-	if strings.Contains(cn, "cn:") {
-		s := strings.Split(cn, ":")
-		if s[1] != "" {
-			return s[1]
-		}
+	s := strings.Split(cn, ":")
+	if s[1] != "" {
+		return s[1]
 	}
 
 	return "certify"
@@ -319,18 +317,16 @@ func parseExpiry(expiry string) time.Time {
 	format["h"] = time.Hour
 	format["d"] = 24 * time.Hour
 
-	if strings.Contains(expiry, "expiry:") {
-		s := strings.Split(expiry, ":")
+	s := strings.Split(expiry, ":")
 
-		for f, d := range format {
-			if strings.HasSuffix(s[1], f) {
-				i, err := strconv.Atoi(strings.TrimSuffix(s[1], f))
-				if err != nil {
-					return time.Now().Add(8766 * time.Hour)
-				}
-
-				return time.Now().Add(time.Duration(i) * d)
+	for f, d := range format {
+		if strings.HasSuffix(s[1], f) {
+			i, err := strconv.Atoi(strings.TrimSuffix(s[1], f))
+			if err != nil {
+				return time.Now().Add(8766 * time.Hour)
 			}
+
+			return time.Now().Add(time.Duration(i) * d)
 		}
 	}
 
