@@ -10,11 +10,12 @@ import (
 	"fmt"
 )
 
+// PrivateKey hold private key
 type PrivateKey struct {
 	*ecdsa.PrivateKey
 }
 
-// getPrivateKey returns struct PrivateKey containing the private key
+// GetPrivateKey returns struct PrivateKey containing the private key
 func GetPrivateKey() (*PrivateKey, error) {
 	pkey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {

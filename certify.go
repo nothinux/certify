@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// Certificate hold certificate information
 type Certificate struct {
 	Subject          pkix.Name
 	NotBefore        time.Time
@@ -27,6 +28,7 @@ type Certificate struct {
 	ExtentedKeyUsage []x509.ExtKeyUsage
 }
 
+// Result hold created certificate in []byte format
 type Result struct {
 	Certificate []byte
 }
@@ -110,6 +112,7 @@ func ParseCertificate(cert []byte) (*x509.Certificate, error) {
 	return c, nil
 }
 
+// CertInfo returns certificate information
 func CertInfo(cert *x509.Certificate) string {
 	var buf bytes.Buffer
 
@@ -163,7 +166,7 @@ func CertInfo(cert *x509.Certificate) string {
 		}
 	}
 
-	buf.WriteString(fmt.Sprintf("%8sSignature Algorithm: %v\n", "", cert.SignatureAlgorithm))
+	buf.WriteString(fmt.Sprintf("%4sSignature Algorithm: %v\n", "", cert.SignatureAlgorithm))
 
 	return buf.String()
 }
