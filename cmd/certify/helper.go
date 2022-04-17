@@ -247,7 +247,7 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.Ext
 	}
 
 	if expiry.IsZero() {
-		expiry = parseExpiry("")
+		expiry = parseExpiry("expiry:")
 	}
 
 	if len(ekus) == 0 {
