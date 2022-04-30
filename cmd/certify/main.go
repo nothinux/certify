@@ -3,14 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"strings"
-	"syscall"
-
-	"github.com/nothinux/certify"
-	"golang.org/x/term"
 )
 
 var usage = `             _   _ ___     
@@ -62,125 +56,39 @@ func main() {
 	}
 
 	if *initialize {
-		pkey, err := generatePrivateKey(caKeyPath)
-		if err != nil {
+		if err := initCA(os.Args); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("CA private key file generated", caKeyPath)
-
-		var cn string
-
-		if len(os.Args) > 2 {
-			if strings.Contains(os.Args[2], "cn:") {
-				cn = os.Args[2]
-			}
-		}
-
-		if err := generateCA(pkey.PrivateKey, cn, caPath); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("CA certificate file generated", caPath)
 		return
 	}
 
 	if *read {
-		var certByte []byte
-		var err error
-
-		if len(os.Args) < 3 {
-			if err := isPipe(os.Stdin); err != nil {
-				log.Fatal(err)
-			}
-
-			certByte, err = io.ReadAll(os.Stdin)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			certByte, err = os.ReadFile(os.Args[2])
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		cert, err := certify.ParseCertificate(certByte)
+		cert, err := readCertificate(os.Args, os.Stdin)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf("%s", certify.CertInfo(cert))
+		fmt.Printf("%s", cert)
 		return
 	}
 
 	if *connect {
-		if len(os.Args) < 3 {
-			fmt.Printf("you must provide remote host.\n")
-			os.Exit(1)
-		}
-
-		result, err := tlsDial(os.Args[2])
+		result, err := readRemoteCertificate(os.Args)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println(certify.CertInfo(result))
+		fmt.Println(result)
 		return
 	}
 
 	if *match {
-		if len(os.Args) < 4 {
-			fmt.Printf("you must provide pkey and cert.\n")
-			os.Exit(1)
-		}
-
-		pubkey, pubcert, err := matcher(os.Args[2], os.Args[3])
-		if err != nil {
+		if err := matchCertificate(os.Args); err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf(
-			"pubkey from %s:\n%s\n\npubkey from %s:\n%s\n✅ certificate and private key match\n",
-			os.Args[2],
-			pubkey,
-			os.Args[3],
-			pubcert,
-		)
-
 		return
 	}
 
 	if *epkcs12 {
-		if len(os.Args) < 5 {
-			fmt.Println("you must provide [key-path] [cert-path] and [ca-path]")
-			os.Exit(1)
-		}
-
-		fmt.Print("enter password: ")
-		bytePass, err := term.ReadPassword(int(syscall.Stdin))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// verify if cert and key has same public key
-		_, _, err = matcher(os.Args[2], os.Args[3])
-		if err != nil {
-			log.Fatal("\n", err)
-		}
-
-		pfxData, err := getPfxData(
-			os.Args[2],
-			os.Args[3],
-			os.Args[4],
-			string(bytePass),
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := os.WriteFile("client.p12", pfxData, 0644); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("\ncertificate exporter to client.p12")
+		exportCertificate(os.Args)
 		return
 	}
 
