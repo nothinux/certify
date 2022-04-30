@@ -174,6 +174,11 @@ func TestReadRemoteCertificate(t *testing.T) {
 			Args:          []string{"certify", "-connect", "1.1.1.1"},
 			ExpectedError: "missing port in address",
 		},
+		{
+			Name:          "Test no Host",
+			Args:          []string{"certify", "-connect"},
+			ExpectedError: "you must provide remote host",
+		},
 	}
 
 	for _, tt := range tests {
@@ -191,12 +196,32 @@ func TestReadRemoteCertificate(t *testing.T) {
 }
 
 func TestMatchCertificate(t *testing.T) {
-	if err := matchCertificate([]string{
-		"certify",
-		"-match",
-		"testdata/ca-key.pem",
-		"testdata/ca-cert.pem",
-	}); err != nil {
-		t.Fatal("private key and public key must match")
+	tests := []struct {
+		Name          string
+		Args          []string
+		expectedError string
+	}{
+		{
+			Name: "Test when certificate and private key match",
+			Args: []string{"certify", "-match", "testdata/ca-key.pem", "testdata/ca-cert.pem"},
+		},
+		{
+			Name:          "Test when certificate and private key doesnt match",
+			Args:          []string{"certify", "-match", "testdata/ca-key.pem", "testdata/nothinux.pem"},
+			expectedError: "private key doesn't match with given certificate",
+		},
+		{
+			Name:          "Test when no private key",
+			Args:          []string{"certify", "-match", "testdata/ca-cert.pem"},
+			expectedError: "you must provide pkey and cert",
+		},
+	}
+
+	for _, tt := range tests {
+		if err := matchCertificate(tt.Args); err != nil {
+			if !strings.Contains(err.Error(), tt.expectedError) {
+				t.Fatalf("got %v, want %v", err.Error(), tt.expectedError)
+			}
+		}
 	}
 }

@@ -86,7 +86,7 @@ func readRemoteCertificate(args []string) (string, error) {
 // matchCertificate math certificate with private key
 func matchCertificate(args []string) error {
 	if len(args) < 4 {
-		return fmt.Errorf("you must provide pkey and cert.\n")
+		return fmt.Errorf("you must provide pkey and cert")
 	}
 
 	pubkey, pubcert, err := matcher(args[2], args[3])
