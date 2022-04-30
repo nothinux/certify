@@ -13,47 +13,28 @@ import (
 	"golang.org/x/term"
 )
 
-const usage = `             _   _ ___     
+var usage = `             _   _ ___     
  ___ ___ ___| |_|_|  _|_ _ 
 |  _| -_|  _|  _| |  _| | |
 |___|___|_| |_| |_|_| |_  |
-                      |___|
+                      |___| Certify v%s
 
 Usage of certify:
-certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
+certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 1y s,m,h,d]
 
-$ certify -init
-⚡️ Initialize new CA Certificate and Key
+$ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
 
-You must create new CA by run -init before you can create certificate.
-
-$ certify server.local 172.17.0.1
-⚡️ Generate certificate with alt name server.local and 172.17.0.1
-
-$ certify cn:web-server
-⚡️ Generate certificate with common name web-server
-
-$ certify server.local expiry:1d
-⚡️ Generate certificate expiry within 1 day
-
-$ certify server.local eku:serverAuth,clientAuth
-⚡️ Generate certificate with extended key usage Server Auth and Client Auth
-
-Also, you can see information from certificate
-
-$ certify -read server.local.pem
-⚡️ Read certificate information from file server.local.pem
-
-$ certify -connect google.com:443
-⚡️ Show certificate information from remote host
-
-Export certificate and private key file to pkcs12 format
-$ certify -export-p12 cert.pem cert-key.pem ca-cert.pem
-⚡️ Generate client.p12 pem file containing certificate, private key and ca certificate
-
-Verify private key matches a certificate
-$ certify -match cert-key.pem cert.pem
-⚡️ verify cert-key.pem and cert.pem has same public key
+Flags:
+  -init
+	Initialize new CA Certificate and Key
+  -read  <filename>
+	Read certificate information from file server.local.pem
+  -connect  <host:443>
+	Show certificate information from remote host
+  -export-p12  <cert> <private-key> <ca-cert>
+	Generate client.p12 pem file containing certificate, private key and ca certificate
+  -match  <private-key> <cert>
+	Verify cert-key.pem and cert.pem has same public key
 `
 
 var (
@@ -70,7 +51,8 @@ var (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprint(flag.CommandLine.Output(), usage)
+		showUsage := fmt.Sprintf(usage, Version)
+		fmt.Fprint(flag.CommandLine.Output(), showUsage)
 	}
 	flag.Parse()
 
