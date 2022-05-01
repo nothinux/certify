@@ -59,7 +59,7 @@ func TestInitCA(t *testing.T) {
 			}
 
 			t.Run("Test parse certificate", func(t *testing.T) {
-				cert, err := getCACert()
+				cert, err := getCACert(caPath)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -246,5 +246,24 @@ func TestCreateCertificate(t *testing.T) {
 		os.Remove(caKeyPath)
 		os.Remove("nothinux.local.pem")
 		os.Remove("nothinux.local-key.pem")
+	})
+}
+
+func TestCreateIntermediateCertificate(t *testing.T) {
+	t.Run("Test create intermediate certificate", func(t *testing.T) {
+		if err := initCA([]string{"certify", "-init"}); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := createIntermediateCertificate([]string{"certify", "-intermediate", "cn:nothinux"}); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Cleanup(func() {
+		os.Remove(caPath)
+		os.Remove(caKeyPath)
+		os.Remove(caInterPath)
+		os.Remove(caInterKeyPath)
 	})
 }

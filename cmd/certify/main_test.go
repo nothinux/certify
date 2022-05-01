@@ -119,6 +119,30 @@ func TestRunMain(t *testing.T) {
 			expectedError: "error CA Certificate or Key is not exists, run -init to create it",
 		},
 		{
+			Name: "Test create intermediate certificate",
+			Args: []string{"-intermediate", "cn:nothinux"},
+			PreRun: func() {
+				if err := initCA([]string{"certify", "-init"}); err != nil {
+					t.Fatal(err)
+				}
+			},
+			RunCheck: func() {
+				cert, err := readCertificate([]string{"certify", "-read", caInterPath}, nil)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !strings.Contains(cert, "Subject: CN=nothinux Intermediate, O=certify") {
+					t.Fatalf("certificate doesn't contain Subject: CN=nothinux Intermediate, O=certify")
+				}
+
+				os.Remove(caPath)
+				os.Remove(caKeyPath)
+				os.Remove(caInterPath)
+				os.Remove(caInterKeyPath)
+			},
+		},
+		{
 			Name: "Test create certificate",
 			Args: []string{"127.0.0.1", "nothinux", "cn:nothinux"},
 			PreRun: func() {
@@ -141,7 +165,6 @@ func TestRunMain(t *testing.T) {
 				os.Remove("nothinux.pem")
 				os.Remove("nothinux-key.pem")
 			},
-			expectedError: "error CA Certificate or Key is not exists, run -init to create it",
 		},
 	}
 
