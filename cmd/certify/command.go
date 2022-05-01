@@ -3,13 +3,10 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/nothinux/certify"
-	"golang.org/x/term"
 )
 
 // initCA create private key and certificate for certificate authority
@@ -72,7 +69,7 @@ func readCertificate(args []string, stdin *os.File) (string, error) {
 // readRemoteCertificate read certificate from remote host
 func readRemoteCertificate(args []string) (string, error) {
 	if len(args) < 3 {
-		return "", fmt.Errorf("you must provide remote host.\n")
+		return "", fmt.Errorf("you must provide remote host")
 	}
 
 	result, err := tlsDial(args[2])
@@ -106,22 +103,11 @@ func matchCertificate(args []string) error {
 }
 
 // exportCertificate export certificate to pkcs12 format
-func exportCertificate(args []string) {
-	if len(args) < 5 {
-		fmt.Println("you must provide [key-path] [cert-path] and [ca-path]")
-		os.Exit(1)
-	}
-
-	fmt.Print("enter password: ")
-	bytePass, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func exportCertificate(args []string, bytePass []byte) error {
 	// verify if cert and key has same public key
-	_, _, err = matcher(args[2], args[3])
+	_, _, err := matcher(args[2], args[3])
 	if err != nil {
-		log.Fatal("\n", err)
+		return err
 	}
 
 	pfxData, err := getPfxData(
@@ -131,13 +117,14 @@ func exportCertificate(args []string) {
 		string(bytePass),
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := os.WriteFile("client.p12", pfxData, 0644); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	fmt.Println("\ncertificate exported to client.p12")
+	return nil
 }
 
 // createCertificate generate certificate and signed with existing CA

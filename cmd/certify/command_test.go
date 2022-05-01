@@ -267,3 +267,51 @@ func TestCreateIntermediateCertificate(t *testing.T) {
 		os.Remove(caInterKeyPath)
 	})
 }
+
+func TestExportCertificate(t *testing.T) {
+	tests := []struct {
+		Name          string
+		Args          []string
+		Password      string
+		expectedError string
+	}{
+		{
+			Name:     "Test export certificate",
+			Args:     []string{"certify", "-match", "testdata/server-key.pem", "testdata/server.pem", "testdata/ca-cert.pem"},
+			Password: "password",
+		},
+		{
+			Name:          "Test export certificate with invalid private key",
+			Args:          []string{"certify", "-match", "testdata/key.pem", "testdata/server.pem", "testdata/ca-cert.pem"},
+			Password:      "password",
+			expectedError: "no such file or directory",
+		},
+		{
+			Name:          "Test export certificate doesn't match with private key",
+			Args:          []string{"certify", "-match", "testdata/server-key.pem", "testdata/nothinux.pem", "testdata/ca-cert.pem"},
+			Password:      "password",
+			expectedError: "private key doesn't match with given certificate",
+		},
+		{
+			Name:          "Test export with wrong argument",
+			Args:          []string{"certify", "-match", "testdata/server.pem", "testdata/server-key.pem", "testdata/ca-cert.pem"},
+			Password:      "password",
+			expectedError: "failed to parse EC private key",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if err := exportCertificate(tt.Args, []byte(tt.Password)); err != nil {
+				if !strings.Contains(err.Error(), tt.expectedError) {
+					t.Fatalf("the error must be contain %s, got %v", tt.expectedError, err)
+				}
+			}
+		})
+
+		t.Cleanup(func() {
+			os.Remove("client.p12")
+		})
+	}
+
+}
