@@ -34,7 +34,7 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 			CommonName:   parseCN(cn),
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(8766 * time.Hour),
+		NotAfter:  time.Now().Add(87660 * time.Hour),
 		IsCA:      true,
 	}
 
@@ -46,17 +46,38 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 	return store(caCert.String(), path)
 }
 
-func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
+func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 	iplist, dnsnames, cn, expiry, ekus := parseArgs(args)
 
-	parentKey, err := getCAPrivateKey()
+	var parent *x509.Certificate
+	var parentKey *ecdsa.PrivateKey
+
+	// By default, If Intermediate CA exists the generated certificate
+	// will be signed with intermediate CA. If not, it will be signed
+	// with rootCA
+
+	parentKey, err = getCAPrivateKey(caInterKeyPath)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			parentKey, err = getCAPrivateKey(caKeyPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
-	parent, err := getCACert()
+	parent, err = getCACert(caInterPath)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			parent, err = getCACert(caPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	template := certify.Certificate{
@@ -89,6 +110,54 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 	return err
 }
 
+func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
+	_, _, cn, expiry, _ := parseArgs(args)
+
+	parentKey, err := getCAPrivateKey(caKeyPath)
+	if err != nil {
+		return err
+	}
+
+	parent, err := getCACert(caPath)
+	if err != nil {
+		return err
+	}
+
+	if cn == "" {
+		cn = "certify"
+	}
+
+	newCN := fmt.Sprintf("%s Intermediate", cn)
+
+	if expiry.Unix() > parent.NotAfter.Unix() {
+		return fmt.Errorf("intermediate certificate expiry date can't longer than root CA")
+	}
+
+	template := certify.Certificate{
+		Subject: pkix.Name{
+			Organization: []string{"certify"},
+			CommonName:   newCN,
+		},
+		NotBefore:        time.Now(),
+		NotAfter:         expiry,
+		IsCA:             true,
+		Parent:           parent,
+		ParentPrivateKey: parentKey,
+	}
+
+	cert, err := template.GetCertificate(pkey)
+	if err != nil {
+		return err
+	}
+
+	err = store(cert.String(), caInterPath)
+	if err == nil {
+		fmt.Println("Certificate file generated", caInterPath)
+	}
+
+	return err
+}
+
 // getFilename returns path based on given args
 // first it will check dnsnames, if nil, then check iplist, if iplist nil too
 // it will check common name
@@ -115,8 +184,8 @@ func getFilename(args []string, key bool) string {
 	return path
 }
 
-func getCAPrivateKey() (*ecdsa.PrivateKey, error) {
-	pkey, err := readPrivateKeyFile("ca-key.pem")
+func getCAPrivateKey(path string) (*ecdsa.PrivateKey, error) {
+	pkey, err := readPrivateKeyFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +207,8 @@ func readPrivateKeyFile(path string) (*ecdsa.PrivateKey, error) {
 	return pkey, nil
 }
 
-func getCACert() (*x509.Certificate, error) {
-	c, err := readCertificateFile("ca-cert.pem")
+func getCACert(path string) (*x509.Certificate, error) {
+	c, err := readCertificateFile(path)
 	if err != nil {
 		return nil, err
 	}

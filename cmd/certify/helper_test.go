@@ -10,12 +10,12 @@ import (
 )
 
 func TestGeneratePrivateKeyAndCA(t *testing.T) {
-	pkey, err := generatePrivateKey("ca-key.pem")
+	pkey, err := generatePrivateKey(caKeyPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := generateCA(pkey.PrivateKey, "cn:local", "ca-cert.pem"); err != nil {
+	if err := generateCA(pkey.PrivateKey, "cn:local", caPath); err != nil {
 		t.Fatal(err)
 	}
 
@@ -30,6 +30,37 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		}
 	})
 
+	t.Run("Test create intermediate certificate with attribut", func(t *testing.T) {
+		ikey, err := generatePrivateKey(caInterKeyPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := generateIntermediateCert(ikey.PrivateKey, []string{"cn:nothinux", "expiry:100d"}); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("Test create intermediate certificate and certificate", func(t *testing.T) {
+		ikey, err := generatePrivateKey(caInterKeyPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := generateIntermediateCert(ikey.PrivateKey, []string{""}); err != nil {
+			t.Fatal(err)
+		}
+
+		pkey, err := generatePrivateKey("/tmp/pkey-2.pem")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := generateCert(pkey.PrivateKey, []string{"127.0.0.1", "local-2.dev", "cn:server-2", "expiry:1d", "eku:serverauth"}); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("Test export certificate to pkcs12", func(t *testing.T) {
 		_, err := getPfxData("/tmp/pkey.pem", "local.dev.pem", "ca-cert.pem", "p4ssw0rd")
 		if err != nil {
@@ -38,18 +69,14 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		if err := os.Remove("ca-cert.pem"); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Remove("ca-key.pem"); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Remove("local.dev.pem"); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Remove("/tmp/pkey.pem"); err != nil {
-			t.Fatal(err)
-		}
+		os.Remove(caPath)
+		os.Remove(caKeyPath)
+		os.Remove(caInterPath)
+		os.Remove(caInterKeyPath)
+		os.Remove("local.dev.pem")
+		os.Remove("/tmp/pkey.pem")
+		os.Remove("local-2.dev.pem")
+		os.Remove("/tmp/pkey-2.pem")
 	})
 }
 

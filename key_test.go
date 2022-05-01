@@ -2,6 +2,7 @@ package certify
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -41,4 +42,13 @@ func TestParsePrivateKey(t *testing.T) {
 			t.Fatalf("\ngot %v\nwant %v\n", pkey.String(), PKEYDATA)
 		}
 	})
+}
+
+func TestParseEmptyPrivateKeyFile(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(""))
+	if err != nil {
+		if !strings.Contains(err.Error(), "no pem data found") {
+			t.Fatal("the error must contain no pem data found")
+		}
+	}
 }
