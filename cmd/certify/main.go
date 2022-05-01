@@ -32,18 +32,27 @@ Flags:
 `
 
 var (
-	caPath     = "ca-cert.pem"
-	caKeyPath  = "ca-key.pem"
-	Version    = "No version provided"
-	initialize = flag.Bool("init", false, "initialize new CA Certificate and Key")
-	read       = flag.Bool("read", false, "read information from certificate")
-	match      = flag.Bool("match", false, "check if private key match with certificate")
-	ver        = flag.Bool("version", false, "see program version")
-	connect    = flag.Bool("connect", false, "show information about certificate on remote host")
-	epkcs12    = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
+	caPath    = "ca-cert.pem"
+	caKeyPath = "ca-key.pem"
+	Version   = "No version provided"
 )
 
 func main() {
+	if err := runMain(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runMain() error {
+	var (
+		initialize = flag.Bool("init", false, "initialize new CA Certificate and Key")
+		read       = flag.Bool("read", false, "read information from certificate")
+		match      = flag.Bool("match", false, "check if private key match with certificate")
+		ver        = flag.Bool("version", false, "see program version")
+		connect    = flag.Bool("connect", false, "show information about certificate on remote host")
+		epkcs12    = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
+	)
+
 	flag.Usage = func() {
 		showUsage := fmt.Sprintf(usage, Version)
 		fmt.Fprint(flag.CommandLine.Output(), showUsage)
@@ -52,66 +61,58 @@ func main() {
 
 	if *ver {
 		fmt.Printf("Certify version v%s\n", Version)
-		return
+		return nil
 	}
 
 	if *initialize {
 		if err := initCA(os.Args); err != nil {
-			log.Fatal(err)
+			return err
 		}
-		return
+		return nil
 	}
 
 	if *read {
 		cert, err := readCertificate(os.Args, os.Stdin)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		fmt.Printf("%s", cert)
-		return
+		return nil
 	}
 
 	if *connect {
 		result, err := readRemoteCertificate(os.Args)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		fmt.Println(result)
-		return
+		return nil
 	}
 
 	if *match {
 		if err := matchCertificate(os.Args); err != nil {
-			log.Fatal(err)
+			return err
 		}
-		return
+		return nil
 	}
 
 	if *epkcs12 {
 		exportCertificate(os.Args)
-		return
+		return nil
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Printf("you must provide at least two argument.\n\n")
 		fmt.Fprint(flag.CommandLine.Output(), usage)
-		os.Exit(1)
+		return fmt.Errorf("you must provide at least two argument")
 	}
 
 	if !isExist(caPath) || !isExist(caKeyPath) {
-		log.Fatal("error CA Certificate or Key is not exists, run -init to create it.")
+		return fmt.Errorf("error CA Certificate or Key is not exists, run -init to create it")
 	}
 
-	keyPath := getFilename(os.Args, true)
-
-	pkey, err := generatePrivateKey(keyPath)
-	if err != nil {
-		log.Fatal(err)
+	if err := createCertificate(os.Args); err != nil {
+		return err
 	}
 
-	fmt.Println("Private key file generated", keyPath)
-
-	if err := generateCert(pkey.PrivateKey, os.Args); err != nil {
-		log.Fatal(err)
-	}
+	return nil
 }

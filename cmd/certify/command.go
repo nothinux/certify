@@ -105,6 +105,7 @@ func matchCertificate(args []string) error {
 	return nil
 }
 
+// exportCertificate export certificate to pkcs12 format
 func exportCertificate(args []string) {
 	if len(args) < 5 {
 		fmt.Println("you must provide [key-path] [cert-path] and [ca-path]")
@@ -137,4 +138,22 @@ func exportCertificate(args []string) {
 		log.Fatal(err)
 	}
 	fmt.Println("\ncertificate exported to client.p12")
+}
+
+// createCertificate generate certificate and signed with existing CA
+func createCertificate(args []string) error {
+	keyPath := getFilename(args, true)
+
+	pkey, err := generatePrivateKey(keyPath)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Private key file generated", keyPath)
+
+	if err := generateCert(pkey.PrivateKey, args); err != nil {
+		return err
+	}
+
+	return nil
 }

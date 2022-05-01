@@ -70,12 +70,8 @@ func TestInitCA(t *testing.T) {
 			})
 
 			t.Cleanup(func() {
-				if err := os.Remove(caPath); err != nil {
-					t.Fatal(err)
-				}
-				if err := os.Remove(caKeyPath); err != nil {
-					t.Fatal(err)
-				}
+				os.Remove(caPath)
+				os.Remove(caKeyPath)
 			})
 		})
 	}
@@ -224,4 +220,31 @@ func TestMatchCertificate(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestCreateCertificate(t *testing.T) {
+	t.Run("Test create certificate with no existing CA", func(t *testing.T) {
+		if err := createCertificate([]string{"certify", "127.0.0.1", "nothinux.local"}); err != nil {
+			if !strings.Contains(err.Error(), "open ca-key.pem: no such file or directory") {
+				t.Fatalf("got %v, want open ca-key.pem: no such file or directory", err.Error())
+			}
+		}
+	})
+
+	t.Run("Test create certificate", func(t *testing.T) {
+		if err := initCA([]string{"certify", "-init"}); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := createCertificate([]string{"certify", "127.0.0.1", "nothinux.local"}); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Cleanup(func() {
+		os.Remove(caPath)
+		os.Remove(caKeyPath)
+		os.Remove("nothinux.local.pem")
+		os.Remove("nothinux.local-key.pem")
+	})
 }
