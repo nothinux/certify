@@ -5,7 +5,7 @@ Certify can be used for creating a private CA (Certificate Authority) and issuin
 Certify is easy to use and can be used as an alternative to OpenSSL.
 
 ## Feature
-+ Create a certificate authorities
++ Create a certificate authorities and intermediate CA
 + Issue certificate with custom common name, ip san, dns san, expiry date, and extended key usage
 + Show certificate information from file or remote host
 + Export certificate to PKCS12 format
@@ -17,40 +17,32 @@ Download in the [release page](https://github.com/nothinux/certify/releases)
 
 ## Usage
 ```
-certify [flag] [ip-or-dns-san] [cn:default certify] [expiry: s,m,h,d]
+             _   _ ___     
+ ___ ___ ___| |_|_|  _|_ _ 
+|  _| -_|  _|  _| |  _| | |
+|___|___|_| |_| |_|_| |_  |
+                      |___| Certify v1.5
 
-$ certify -init
-⚡️ Initialize new CA Certificate and Key
+Usage of certify:  
+certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
 
-You must create new CA by run -init before you can create certificate.
+$ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
 
-$ certify server.local 172.17.0.1
-⚡️ Generate certificate with alt name server.local and 172.17.0.1
-
-$ certify cn:web-server
-⚡️ Generate certificate with common name web-server
-
-$ certify server.local expiry:1d
-⚡️ Generate certificate expiry within 1 day
-
-$ certify server.local eku:serverAuth,clientAuth
-⚡️ Generate certificate with extended key usage Server Auth and Client Auth
-
-Also, you can see information from certificate
-
-$ certify -read server.local.pem
-⚡️ Read certificate information from file server.local.pem
-
-$ certify -connect google.com:443
-⚡️ Show certificate information from remote host
-
-Export certificate and private key file to pkcs12 format
-$ certify -export-p12 cert.pem cert-key.pem ca-cert.pem
-⚡️ Generate client.p12 pem file containing certificate, private key and ca certificate
-
-Verify private key matches a certificate
-$ certify -match cert-key.pem cert.pem
-⚡️ verify cert-key.pem and cert.pem has same public key
+Flags:
+  -init
+        Initialize new root CA Certificate and Key
+  -intermediate
+        Generate intermediate certificate
+  -read  <filename>
+        Read certificate information from file server.local.pem
+  -connect  <host:443>
+        Show certificate information from remote host
+  -export-p12  <cert> <private-key> <ca-cert>
+        Generate client.p12 pem file containing certificate, private key and ca certificate
+  -match  <private-key> <cert>
+        Verify cert-key.pem and cert.pem has same public key
+  -version
+        print certify version
 ```
 
 ## Use Certify as library

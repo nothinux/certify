@@ -14,7 +14,7 @@ var usage = `             _   _ ___
                       |___| Certify v%s
 
 Usage of certify:
-certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 1y s,m,h,d]
+certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
 
 $ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
 
@@ -22,7 +22,7 @@ Flags:
   -init
 	Initialize new root CA Certificate and Key
   -intermediate
-    Generate intermediate certificate
+	Generate intermediate certificate
   -read  <filename>
 	Read certificate information from file server.local.pem
   -connect  <host:443>
@@ -32,7 +32,7 @@ Flags:
   -match  <private-key> <cert>
 	Verify cert-key.pem and cert.pem has same public key
   -version
-    print certify version
+	print certify version
 `
 
 var (
