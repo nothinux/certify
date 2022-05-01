@@ -157,3 +157,19 @@ func createCertificate(args []string) error {
 
 	return nil
 }
+
+// createIntermediateCertificate generate intermediate certificate and signed with existing root CA
+func createIntermediateCertificate(args []string) error {
+	pkey, err := generatePrivateKey(caInterKeyPath)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Private key file generated", caInterKeyPath)
+
+	if err := generateIntermediateCert(pkey.PrivateKey, args); err != nil {
+		return err
+	}
+
+	return nil
+}

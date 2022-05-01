@@ -34,7 +34,7 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 			CommonName:   parseCN(cn),
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(8766 * time.Hour),
+		NotAfter:  time.Now().Add(87660 * time.Hour),
 		IsCA:      true,
 	}
 
@@ -84,6 +84,50 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) error {
 	err = store(cert.String(), certPath)
 	if err == nil {
 		fmt.Println("Certificate file generated", certPath)
+	}
+
+	return err
+}
+
+func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
+	_, _, cn, expiry, _ := parseArgs(args)
+
+	parentKey, err := getCAPrivateKey()
+	if err != nil {
+		return err
+	}
+
+	parent, err := getCACert()
+	if err != nil {
+		return err
+	}
+
+	newCN := fmt.Sprintf("%s Intermediate", cn)
+
+	if expiry.Unix() > parent.NotAfter.Unix() {
+		return fmt.Errorf("intermediate certificate expiry date can't longer than root CA")
+	}
+
+	template := certify.Certificate{
+		Subject: pkix.Name{
+			Organization: []string{"certify"},
+			CommonName:   newCN,
+		},
+		NotBefore:        time.Now(),
+		NotAfter:         expiry,
+		IsCA:             true,
+		Parent:           parent,
+		ParentPrivateKey: parentKey,
+	}
+
+	cert, err := template.GetCertificate(pkey)
+	if err != nil {
+		return err
+	}
+
+	err = store(cert.String(), caInterPath)
+	if err == nil {
+		fmt.Println("Certificate file generated", caInterPath)
 	}
 
 	return err

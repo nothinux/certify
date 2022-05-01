@@ -20,7 +20,9 @@ $ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
 
 Flags:
   -init
-	Initialize new CA Certificate and Key
+	Initialize new root CA Certificate and Key
+  -intermediate
+    Generate intermediate certificate
   -read  <filename>
 	Read certificate information from file server.local.pem
   -connect  <host:443>
@@ -29,12 +31,16 @@ Flags:
 	Generate client.p12 pem file containing certificate, private key and ca certificate
   -match  <private-key> <cert>
 	Verify cert-key.pem and cert.pem has same public key
+  -version
+    print certify version
 `
 
 var (
-	caPath    = "ca-cert.pem"
-	caKeyPath = "ca-key.pem"
-	Version   = "No version provided"
+	caPath         = "ca-cert.pem"
+	caKeyPath      = "ca-key.pem"
+	caInterPath    = "ca-intermediate.pem"
+	caInterKeyPath = "ca-intermediate-key.pem"
+	Version        = "No version provided"
 )
 
 func main() {
@@ -45,12 +51,13 @@ func main() {
 
 func runMain() error {
 	var (
-		initialize = flag.Bool("init", false, "initialize new CA Certificate and Key")
-		read       = flag.Bool("read", false, "read information from certificate")
-		match      = flag.Bool("match", false, "check if private key match with certificate")
-		ver        = flag.Bool("version", false, "see program version")
-		connect    = flag.Bool("connect", false, "show information about certificate on remote host")
-		epkcs12    = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
+		initialize   = flag.Bool("init", false, "initialize new root CA Certificate and Key")
+		intermediate = flag.Bool("intermediate", false, "create intermediate certificate")
+		read         = flag.Bool("read", false, "read information from certificate")
+		match        = flag.Bool("match", false, "check if private key match with certificate")
+		ver          = flag.Bool("version", false, "see program version")
+		connect      = flag.Bool("connect", false, "show information about certificate on remote host")
+		epkcs12      = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 	)
 
 	flag.Usage = func() {
@@ -108,6 +115,13 @@ func runMain() error {
 
 	if !isExist(caPath) || !isExist(caKeyPath) {
 		return fmt.Errorf("error CA Certificate or Key is not exists, run -init to create it")
+	}
+
+	if *intermediate {
+		if err := createIntermediateCertificate(os.Args); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	if err := createCertificate(os.Args); err != nil {
