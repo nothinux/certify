@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"syscall"
+
+	"golang.org/x/term"
 )
 
 var usage = `             _   _ ___     
@@ -104,7 +107,21 @@ func runMain() error {
 	}
 
 	if *epkcs12 {
-		exportCertificate(os.Args)
+		if len(os.Args) < 5 {
+			fmt.Println("you must provide [key-path] [cert-path] and [ca-path]")
+			os.Exit(1)
+		}
+
+		fmt.Print("enter password: ")
+		bytePass, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := exportCertificate(os.Args, bytePass); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
