@@ -1,11 +1,10 @@
-# Certify
-[![Go Reference](https://pkg.go.dev/badge/github.com/nothinux/certify.svg)](https://pkg.go.dev/github.com/nothinux/certify)  [![Go Report Card](https://goreportcard.com/badge/github.com/nothinux/certify)](https://goreportcard.com/report/github.com/nothinux/certify)  ![test status](https://github.com/nothinux/certify/actions/workflows/test.yml/badge.svg?branch=master)  [![codecov](https://codecov.io/gh/nothinux/certify/branch/master/graph/badge.svg?token=iR3c5Zwo3F)](https://codecov.io/gh/nothinux/certify)  
-Certify can be used for creating a private CA (Certificate Authority) and issuing certificates signed by the pre-created CA.
+# :lock: Certify
+Certify is an easy-to-use certificate manager and can be used as an alternative to OpenSSL. With Certify you can create your own private CA (Certificate Authority) and issue certificates with your own CA.
 
-Certify is easy to use and can be used as an alternative to OpenSSL.
+[![Go Reference](https://pkg.go.dev/badge/github.com/nothinux/certify.svg)](https://pkg.go.dev/github.com/nothinux/certify)  [![Go Report Card](https://goreportcard.com/badge/github.com/nothinux/certify)](https://goreportcard.com/report/github.com/nothinux/certify)  ![test status](https://github.com/nothinux/certify/actions/workflows/test.yml/badge.svg?branch=master)  [![codecov](https://codecov.io/gh/nothinux/certify/branch/master/graph/badge.svg?token=iR3c5Zwo3F)](https://codecov.io/gh/nothinux/certify)  
 
 ## Feature
-+ Create a certificate authorities and intermediate CA
++ Create a CA and intermediate CA
 + Issue certificate with custom common name, ip san, dns san, expiry date, and extended key usage
 + Show certificate information from file or remote host
 + Export certificate to PKCS12 format
