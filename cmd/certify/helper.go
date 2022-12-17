@@ -27,14 +27,16 @@ func generatePrivateKey(path string) (*certify.PrivateKey, error) {
 	return p, store(p.String(), path)
 }
 
-func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
+func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) error {
+	_, _, cn, org, expiry, _ := parseArgs(args)
+
 	template := certify.Certificate{
 		Subject: pkix.Name{
-			Organization: []string{"certify"},
-			CommonName:   parseCN(cn),
+			Organization: []string{org},
+			CommonName:   cn,
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(87660 * time.Hour),
+		NotAfter:  expiry,
 		IsCA:      true,
 	}
 
@@ -47,7 +49,7 @@ func generateCA(pkey *ecdsa.PrivateKey, cn string, path string) error {
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
-	iplist, dnsnames, cn, expiry, ekus := parseArgs(args)
+	iplist, dnsnames, cn, org, expiry, ekus := parseArgs(args)
 
 	var parent *x509.Certificate
 	var parentKey *ecdsa.PrivateKey
@@ -82,7 +84,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 
 	template := certify.Certificate{
 		Subject: pkix.Name{
-			Organization: []string{"certify"},
+			Organization: []string{org},
 			CommonName:   cn,
 		},
 		NotBefore:        time.Now(),
@@ -111,7 +113,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 }
 
 func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
-	_, _, cn, expiry, _ := parseArgs(args)
+	_, _, cn, org, expiry, _ := parseArgs(args)
 
 	parentKey, err := getCAPrivateKey(caKeyPath)
 	if err != nil {
@@ -123,10 +125,6 @@ func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
 		return err
 	}
 
-	if cn == "" {
-		cn = "certify"
-	}
-
 	newCN := fmt.Sprintf("%s Intermediate", cn)
 
 	if expiry.Unix() > parent.NotAfter.Unix() {
@@ -135,7 +133,7 @@ func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
 
 	template := certify.Certificate{
 		Subject: pkix.Name{
-			Organization: []string{"certify"},
+			Organization: []string{org},
 			CommonName:   newCN,
 		},
 		NotBefore:        time.Now(),
@@ -162,7 +160,7 @@ func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
 // first it will check dnsnames, if nil, then check iplist, if iplist nil too
 // it will check common name
 func getFilename(args []string, key bool) string {
-	iplist, dnsnames, cn, _, _ := parseArgs(args)
+	iplist, dnsnames, cn, _, _, _ := parseArgs(args)
 
 	var ext string
 	var path string
@@ -291,11 +289,11 @@ func matcher(key, cert string) (string, string, error) {
 	return comparePublicKey(k, c)
 }
 
-// parseAltNames returns parsed net.IP, DNS, Common Name and expiry date in slice format
-func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.ExtKeyUsage) {
+// parseAltNames returns parsed net.IP, DNS, Common Name, Organization and expiry date in slice format
+func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []x509.ExtKeyUsage) {
 	var iplist []net.IP
 	var dnsnames []string
-	var cn string
+	var cn, organization string
 	var expiry time.Time
 	var ekus []x509.ExtKeyUsage
 
@@ -304,7 +302,11 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.Ext
 			iplist = append(iplist, net.ParseIP(arg))
 		} else if strings.Contains(arg, "cn:") {
 			if cn == "" {
-				cn = parseCN(arg)
+				cn = parseString(arg)
+			}
+		} else if strings.Contains(arg, "o:") {
+			if organization == "" {
+				organization = parseString(arg)
 			}
 		} else if strings.Contains(arg, "expiry:") {
 			expiry = parseExpiry(arg)
@@ -319,6 +321,14 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.Ext
 		expiry = parseExpiry("expiry:")
 	}
 
+	if cn == "" {
+		cn = "certify"
+	}
+
+	if organization == "" {
+		organization = "certify"
+	}
+
 	if len(ekus) == 0 {
 		ekus = []x509.ExtKeyUsage{
 			x509.ExtKeyUsageClientAuth,
@@ -326,11 +336,11 @@ func parseArgs(args []string) ([]net.IP, []string, string, time.Time, []x509.Ext
 		}
 	}
 
-	return iplist, dnsnames, cn, expiry, ekus
+	return iplist, dnsnames, cn, organization, expiry, ekus
 }
 
-func parseCN(cn string) string {
-	s := strings.Split(cn, ":")
+func parseString(ss string) string {
+	s := strings.Split(ss, ":")
 	if s[1] != "" {
 		return s[1]
 	}

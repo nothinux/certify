@@ -17,7 +17,7 @@ var usage = `             _   _ ___
                       |___| Certify v%s
 
 Usage of certify:
-certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
+certify [flag] [ip-or-dns-san] [cn:default certify] [o: default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
 
 $ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
 

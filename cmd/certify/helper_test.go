@@ -15,7 +15,7 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := generateCA(pkey.PrivateKey, "cn:local", caPath); err != nil {
+	if err := generateCA(pkey.PrivateKey, []string{"cn:local"}, caPath); err != nil {
 		t.Fatal(err)
 	}
 
@@ -30,7 +30,7 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		}
 	})
 
-	t.Run("Test create intermediate certificate with attribut", func(t *testing.T) {
+	t.Run("Test create intermediate certificate with attribute", func(t *testing.T) {
 		ikey, err := generatePrivateKey(caInterKeyPath)
 		if err != nil {
 			t.Fatal(err)
@@ -99,57 +99,89 @@ func TestMatcher(t *testing.T) {
 
 func TestParseArgs(t *testing.T) {
 	tests := []struct {
-		Name           string
-		Args           []string
-		expectedIP     []net.IP
-		expectedDNS    []string
-		expectedCN     string
-		expectedExpiry time.Time
-		expectedEku    []x509.ExtKeyUsage
+		Name                 string
+		Args                 []string
+		expectedIP           []net.IP
+		expectedDNS          []string
+		expectedCN           string
+		expectedOrganization string
+		expectedExpiry       time.Time
+		expectedEku          []x509.ExtKeyUsage
 	}{
 		{
-			Name:        "Test with ip and dns names",
-			Args:        []string{"certify", "127.0.0.1", "172.16.0.1", "example.com"},
-			expectedIP:  []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("172.16.0.1")},
-			expectedDNS: []string{"example.com"},
+			Name:                 "Test with ip and dns names",
+			Args:                 []string{"certify", "127.0.0.1", "172.16.0.1", "example.com"},
+			expectedIP:           []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("172.16.0.1")},
+			expectedDNS:          []string{"example.com"},
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:        "Test only dns names",
-			Args:        []string{"certify", "example.com"},
-			expectedDNS: []string{"example.com"},
+			Name:                 "Test only dns names",
+			Args:                 []string{"certify", "example.com"},
+			expectedDNS:          []string{"example.com"},
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:        "test with ip, dns and common name",
-			Args:        []string{"certify", "cn:manager", "172.16.0.1", "example.com"},
-			expectedIP:  []net.IP{net.ParseIP("172.16.0.1")},
-			expectedDNS: []string{"example.com"},
-			expectedCN:  "manager",
+			Name:                 "test with ip, dns and common name",
+			Args:                 []string{"certify", "cn:manager", "172.16.0.1", "example.com"},
+			expectedIP:           []net.IP{net.ParseIP("172.16.0.1")},
+			expectedDNS:          []string{"example.com"},
+			expectedCN:           "manager",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:       "test with multiple ip",
-			Args:       []string{"certify", "172.16.0.1", "192.168.0.1"},
-			expectedIP: []net.IP{net.ParseIP("172.16.0.1"), net.ParseIP("192.168.0.1")},
+			Name:                 "test with multiple ip",
+			Args:                 []string{"certify", "172.16.0.1", "192.168.0.1"},
+			expectedIP:           []net.IP{net.ParseIP("172.16.0.1"), net.ParseIP("192.168.0.1")},
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:        "test with multiple dns",
-			Args:        []string{"certify", "sub.example.com", "srv.example.com", "example.com"},
-			expectedDNS: []string{"sub.example.com", "srv.example.com", "example.com"},
+			Name:                 "test with multiple dns",
+			Args:                 []string{"certify", "sub.example.com", "srv.example.com", "example.com"},
+			expectedDNS:          []string{"sub.example.com", "srv.example.com", "example.com"},
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:       "test with multiple common name",
-			Args:       []string{"certify", "cn:srv.example.com", "cn:example.com"},
-			expectedCN: "srv.example.com",
+			Name:                 "test with common name",
+			Args:                 []string{"certify", "cn:example.com"},
+			expectedCN:           "example.com",
+			expectedOrganization: "certify",
 		},
 		{
-			Name:           "Test with expiry 12 hours",
-			Args:           []string{"certify", "sub.example.local", "expiry:12h"},
-			expectedExpiry: time.Now().Add(12 * time.Hour),
+			Name:                 "test with organization",
+			Args:                 []string{"certify", "o:nothinux"},
+			expectedCN:           "certify",
+			expectedOrganization: "nothinux",
 		},
 		{
-			Name:           "Test with expiry 30 days",
-			Args:           []string{"certify", "cn:server", "expiry:30d"},
-			expectedExpiry: time.Now().Add(30 * 24 * time.Hour),
-			expectedCN:     "server",
+			Name:                 "test with common name and organization",
+			Args:                 []string{"certify", "cn:server", "o:nothinux"},
+			expectedCN:           "server",
+			expectedOrganization: "nothinux",
+		},
+		{
+			Name:                 "test with multiple common name",
+			Args:                 []string{"certify", "cn:srv.example.com", "cn:example.com"},
+			expectedCN:           "srv.example.com",
+			expectedOrganization: "certify",
+		},
+		{
+			Name:                 "Test with expiry 12 hours",
+			Args:                 []string{"certify", "sub.example.local", "expiry:12h"},
+			expectedExpiry:       time.Now().Add(12 * time.Hour),
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
+		},
+		{
+			Name:                 "Test with expiry 30 days",
+			Args:                 []string{"certify", "cn:server", "expiry:30d"},
+			expectedExpiry:       time.Now().Add(30 * 24 * time.Hour),
+			expectedCN:           "server",
+			expectedOrganization: "certify",
 		},
 		{
 			Name: "Test with custom ekus",
@@ -158,13 +190,14 @@ func TestParseArgs(t *testing.T) {
 				x509.ExtKeyUsageServerAuth,
 				x509.ExtKeyUsageCodeSigning,
 			},
-			expectedCN: "client",
+			expectedCN:           "client",
+			expectedOrganization: "certify",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			ips, dns, cn, expiry, ekus := parseArgs(tt.Args)
+			ips, dns, cn, o, expiry, ekus := parseArgs(tt.Args)
 
 			if len(tt.expectedIP) != 0 {
 				for i, ip := range ips {
@@ -184,6 +217,10 @@ func TestParseArgs(t *testing.T) {
 
 			if cn != tt.expectedCN {
 				t.Fatalf("got %v, want %v", cn, tt.expectedCN)
+			}
+
+			if o != tt.expectedOrganization {
+				t.Fatalf("got %v, want %v", o, tt.expectedOrganization)
 			}
 
 			if !tt.expectedExpiry.IsZero() {
@@ -288,11 +325,13 @@ func TestGetFilename(t *testing.T) {
 	}
 }
 
-func TestParseCN(t *testing.T) {
+func TestParseString(t *testing.T) {
 	tests := []struct {
-		Name       string
-		CN         string
-		ExpectedCN string
+		Name                 string
+		CN                   string
+		ExpectedCN           string
+		Organization         string
+		ExpectedOrganization string
 	}{
 		{
 			Name:       "Test valid common name",
@@ -304,14 +343,29 @@ func TestParseCN(t *testing.T) {
 			CN:         "cn:",
 			ExpectedCN: "certify",
 		},
+		{
+			Name:                 "Test valid organization",
+			Organization:         "o:nothinux",
+			ExpectedOrganization: "nothinux",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			parsedCN := parseCN(tt.CN)
+			if tt.CN != "" {
+				parsedCN := parseString(tt.CN)
 
-			if parsedCN != tt.ExpectedCN {
-				t.Fatalf("got %v, want %v", parsedCN, tt.ExpectedCN)
+				if parsedCN != tt.ExpectedCN {
+					t.Fatalf("got %v, want %v", parsedCN, tt.ExpectedCN)
+				}
+			}
+
+			if tt.Organization != "" {
+				parsedOrganization := parseString(tt.Organization)
+
+				if parsedOrganization != tt.ExpectedOrganization {
+					t.Fatalf("got %v, want %v", parsedOrganization, tt.ExpectedOrganization)
+				}
 			}
 		})
 	}

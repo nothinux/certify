@@ -43,7 +43,7 @@ func TestInitCA(t *testing.T) {
 		{
 			Name:       "Test run -init with 4 argument",
 			Args:       []string{"certify", "-init", "cert", "cn:aaa"},
-			expectedCN: "certify",
+			expectedCN: "aaa",
 		},
 		{
 			Name:       "Test run -init with cn",
