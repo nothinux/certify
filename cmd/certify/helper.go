@@ -125,10 +125,6 @@ func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
 		return err
 	}
 
-	if cn == "" {
-		cn = "certify"
-	}
-
 	newCN := fmt.Sprintf("%s Intermediate", cn)
 
 	if expiry.Unix() > parent.NotAfter.Unix() {
@@ -323,6 +319,14 @@ func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []
 
 	if expiry.IsZero() {
 		expiry = parseExpiry("expiry:")
+	}
+
+	if cn == "" {
+		cn = "certify"
+	}
+
+	if organization == "" {
+		organization = "certify"
 	}
 
 	if len(ekus) == 0 {

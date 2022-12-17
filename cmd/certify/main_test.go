@@ -133,7 +133,7 @@ func TestRunMain(t *testing.T) {
 				}
 
 				if !strings.Contains(cert, "Subject: CN=nothinux Intermediate, O=certify") {
-					t.Fatalf("certificate doesn't contain Subject: CN=nothinux Intermediate, O=certify")
+					t.Fatalf("certificate doesn't contain Subject: CN=nothinux Intermediate, O=certify got %v", cert)
 				}
 
 				os.Remove(caPath)
