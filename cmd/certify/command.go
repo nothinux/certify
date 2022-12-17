@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/nothinux/certify"
 )
@@ -17,19 +16,7 @@ func initCA(args []string) error {
 	}
 	fmt.Println("CA private key file generated", caKeyPath)
 
-	var cn string
-
-	if len(args) < 3 {
-		cn = "cn:"
-	} else {
-		if strings.Contains(args[2], "cn:") {
-			cn = args[2]
-		} else {
-			cn = "cn:"
-		}
-	}
-
-	if err := generateCA(pkey.PrivateKey, cn, caPath); err != nil {
+	if err := generateCA(pkey.PrivateKey, args, caPath); err != nil {
 		return err
 	}
 

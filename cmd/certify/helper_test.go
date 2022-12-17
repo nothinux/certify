@@ -15,7 +15,7 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := generateCA(pkey.PrivateKey, "cn:local", caPath); err != nil {
+	if err := generateCA(pkey.PrivateKey, []string{"cn:local"}, caPath); err != nil {
 		t.Fatal(err)
 	}
 
@@ -30,7 +30,7 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		}
 	})
 
-	t.Run("Test create intermediate certificate with attribut", func(t *testing.T) {
+	t.Run("Test create intermediate certificate with attribute", func(t *testing.T) {
 		ikey, err := generatePrivateKey(caInterKeyPath)
 		if err != nil {
 			t.Fatal(err)
@@ -99,13 +99,14 @@ func TestMatcher(t *testing.T) {
 
 func TestParseArgs(t *testing.T) {
 	tests := []struct {
-		Name           string
-		Args           []string
-		expectedIP     []net.IP
-		expectedDNS    []string
-		expectedCN     string
-		expectedExpiry time.Time
-		expectedEku    []x509.ExtKeyUsage
+		Name                 string
+		Args                 []string
+		expectedIP           []net.IP
+		expectedDNS          []string
+		expectedCN           string
+		expectedOrganization string
+		expectedExpiry       time.Time
+		expectedEku          []x509.ExtKeyUsage
 	}{
 		{
 			Name:        "Test with ip and dns names",
@@ -164,7 +165,7 @@ func TestParseArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			ips, dns, cn, expiry, ekus := parseArgs(tt.Args)
+			ips, dns, cn, o, expiry, ekus := parseArgs(tt.Args)
 
 			if len(tt.expectedIP) != 0 {
 				for i, ip := range ips {
@@ -184,6 +185,10 @@ func TestParseArgs(t *testing.T) {
 
 			if cn != tt.expectedCN {
 				t.Fatalf("got %v, want %v", cn, tt.expectedCN)
+			}
+
+			if o != tt.expectedOrganization {
+				t.Fatalf("got %v, want %v", o, tt.expectedOrganization)
 			}
 
 			if !tt.expectedExpiry.IsZero() {
@@ -288,11 +293,13 @@ func TestGetFilename(t *testing.T) {
 	}
 }
 
-func TestParseCN(t *testing.T) {
+func TestParseString(t *testing.T) {
 	tests := []struct {
-		Name       string
-		CN         string
-		ExpectedCN string
+		Name                 string
+		CN                   string
+		ExpectedCN           string
+		Organization         string
+		ExpectedOrganization string
 	}{
 		{
 			Name:       "Test valid common name",
@@ -304,14 +311,29 @@ func TestParseCN(t *testing.T) {
 			CN:         "cn:",
 			ExpectedCN: "certify",
 		},
+		{
+			Name:                 "Test valid organization",
+			Organization:         "o:nothinux",
+			ExpectedOrganization: "nothinux",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			parsedCN := parseCN(tt.CN)
+			if tt.CN != "" {
+				parsedCN := parseString(tt.CN)
 
-			if parsedCN != tt.ExpectedCN {
-				t.Fatalf("got %v, want %v", parsedCN, tt.ExpectedCN)
+				if parsedCN != tt.ExpectedCN {
+					t.Fatalf("got %v, want %v", parsedCN, tt.ExpectedCN)
+				}
+			}
+
+			if tt.Organization != "" {
+				parsedOrganization := parseString(tt.Organization)
+
+				if parsedOrganization != tt.ExpectedOrganization {
+					t.Fatalf("got %v, want %v", parsedOrganization, tt.ExpectedOrganization)
+				}
 			}
 		})
 	}
