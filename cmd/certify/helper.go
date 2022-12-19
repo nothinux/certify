@@ -414,6 +414,10 @@ func parseExpiry(expiry string) time.Time {
 
 // store write content to given path and returns an error
 func store(c, path string) error {
+	if isExist(path) {
+		return errors.New(fmt.Sprintf("file %s already exists", path))
+	}
+
 	return os.WriteFile(path, []byte(c), 0640)
 }
 
