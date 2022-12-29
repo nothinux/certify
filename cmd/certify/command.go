@@ -59,7 +59,9 @@ func readRemoteCertificate(args []string) (string, error) {
 		return "", fmt.Errorf("you must provide remote host")
 	}
 
-	result, err := tlsDial(args[2])
+	tlsConfig := parseTLSVersion(args)
+
+	result, err := tlsDial(args[2], tlsConfig)
 	if err != nil {
 		return "", err
 	}

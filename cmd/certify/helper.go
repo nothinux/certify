@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -440,12 +441,44 @@ func isPipe(stdin *os.File) error {
 	return nil
 }
 
-func tlsDial(host string) (*x509.Certificate, error) {
+func parseTLSVersion(args []string) *tls.Config {
+	for _, arg := range args[1:] {
+		if strings.Contains(arg, "tlsver:") {
+			ver := strings.Split(arg, ":")[1]
+			return setTLSVersion(ver)
+		}
+	}
+
+	log.Println("use default settings ...")
+	return &tls.Config{}
+}
+
+func setTLSVersion(ver string) *tls.Config {
+	tlsConfig := &tls.Config{}
+
+	if ver == "1.0" {
+		tlsConfig.MinVersion = tls.VersionTLS10
+		tlsConfig.MaxVersion = tls.VersionTLS10
+	} else if ver == "1.1" {
+		tlsConfig.MinVersion = tls.VersionTLS11
+		tlsConfig.MaxVersion = tls.VersionTLS11
+	} else if ver == "1.2" {
+		tlsConfig.MinVersion = tls.VersionTLS12
+		tlsConfig.MaxVersion = tls.VersionTLS12
+	} else if ver == "1.3" {
+		tlsConfig.MinVersion = tls.VersionTLS13
+		tlsConfig.MaxVersion = tls.VersionTLS13
+	}
+
+	return tlsConfig
+}
+
+func tlsDial(host string, tlsConfig *tls.Config) (*x509.Certificate, error) {
 	dialer := &net.Dialer{
 		Timeout: 5 * time.Second,
 	}
 
-	net, err := tls.DialWithDialer(dialer, "tcp", host, &tls.Config{})
+	net, err := tls.DialWithDialer(dialer, "tcp", host, tlsConfig)
 	if err != nil {
 		return nil, err
 	}

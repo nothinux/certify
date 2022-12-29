@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"net"
 	"os"
@@ -522,16 +523,90 @@ func TestIsExist(t *testing.T) {
 
 func TestTlsDial(t *testing.T) {
 	t.Run("Test valid host", func(t *testing.T) {
-		_, err := tlsDial("google.com:443")
+		_, err := tlsDial("google.com:443", &tls.Config{})
 		if err != nil {
 			t.Fatalf("the dial must be success %v", err)
 		}
 	})
 
 	t.Run("Test Invalid host", func(t *testing.T) {
-		_, err := tlsDial("google.com")
+		_, err := tlsDial("google.com", &tls.Config{})
 		if err == nil {
 			t.Fatalf("the dial must be error")
 		}
 	})
+}
+
+func TestParseTLSVersion(t *testing.T) {
+	tests := []struct {
+		Name           string
+		Args           []string
+		ExpectedConfig *tls.Config
+		ExpectedErr    error
+	}{
+		{
+			Name: "Test using tls version 1.0",
+			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.0"},
+			ExpectedConfig: &tls.Config{
+				MinVersion: tls.VersionTLS10,
+				MaxVersion: tls.VersionTLS10,
+			},
+			ExpectedErr: nil,
+		},
+		{
+			Name: "Test using tls version 1.1",
+			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
+			ExpectedConfig: &tls.Config{
+				MinVersion: tls.VersionTLS11,
+				MaxVersion: tls.VersionTLS11,
+			},
+			ExpectedErr: nil,
+		},
+		{
+			Name: "Test using tls version 1.2",
+			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.2"},
+			ExpectedConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				MaxVersion: tls.VersionTLS12,
+			},
+			ExpectedErr: nil,
+		},
+		{
+			Name: "Test using tls version 1.3",
+			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.3"},
+			ExpectedConfig: &tls.Config{
+				MinVersion: tls.VersionTLS13,
+				MaxVersion: tls.VersionTLS13,
+			},
+			ExpectedErr: nil,
+		},
+		{
+			Name:           "Test using not available tls version",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.4"},
+			ExpectedConfig: &tls.Config{},
+			ExpectedErr:    nil,
+		},
+		{
+			Name:           "Test using not available tls version",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:sslv3"},
+			ExpectedConfig: &tls.Config{},
+			ExpectedErr:    nil,
+		},
+		{
+			Name:           "Test without provide tls version",
+			Args:           []string{"certify", "-connect", "google.com:443"},
+			ExpectedConfig: &tls.Config{},
+			ExpectedErr:    nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			config := parseTLSVersion(tt.Args)
+
+			if !reflect.DeepEqual(config, tt.ExpectedConfig) {
+				t.Fatalf("got %v, want %v", config, tt.ExpectedConfig)
+			}
+		})
+	}
 }
