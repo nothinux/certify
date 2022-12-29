@@ -229,6 +229,8 @@ func TestCreateCertificate(t *testing.T) {
 				t.Fatalf("got %v, want open ca-key.pem: no such file or directory", err.Error())
 			}
 		}
+
+		os.Remove("nothinux.local-key.pem")
 	})
 
 	t.Run("Test create certificate", func(t *testing.T) {
