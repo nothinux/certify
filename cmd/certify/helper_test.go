@@ -20,12 +20,12 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 	}
 
 	t.Run("Test create certificate", func(t *testing.T) {
-		pkey, err := generatePrivateKey("/tmp/pkey.pem")
+		cpkey, err := generatePrivateKey("/tmp/pkey.pem")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if err := generateCert(pkey.PrivateKey, []string{"127.0.0.1", "local.dev", "cn:server", "expiry:1d", "eku:serverauth"}); err != nil {
+		if err := generateCert(cpkey.PrivateKey, []string{"127.0.0.1", "local.dev", "cn:server", "expiry:1d", "eku:serverauth"}); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -39,6 +39,12 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		if err := generateIntermediateCert(ikey.PrivateKey, []string{"cn:nothinux", "expiry:100d"}); err != nil {
 			t.Fatal(err)
 		}
+
+		t.Cleanup(func() {
+			cleanupfiles([]string{
+				caInterPath, caInterKeyPath,
+			})
+		})
 	})
 
 	t.Run("Test create intermediate certificate and certificate", func(t *testing.T) {
@@ -69,15 +75,16 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		os.Remove(caPath)
-		os.Remove(caKeyPath)
-		os.Remove(caInterPath)
-		os.Remove(caInterKeyPath)
-		os.Remove("local.dev.pem")
-		os.Remove("/tmp/pkey.pem")
-		os.Remove("local-2.dev.pem")
-		os.Remove("/tmp/pkey-2.pem")
+		cleanupfiles([]string{
+			caPath, caKeyPath, caInterPath, caInterKeyPath, caKeyPath, "local.dev.pem", "/tmp/pkey.pem", "local-2.dev.pem", "/tmp/pkey-2.pem",
+		})
 	})
+}
+
+func cleanupfiles(paths []string) {
+	for _, path := range paths {
+		os.Remove(path)
+	}
 }
 
 func TestMatcher(t *testing.T) {
