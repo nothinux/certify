@@ -35,7 +35,7 @@ Flags:
   -read  <filename>
         Read certificate information from file server.local.pem
   -connect  <host:443> <tlsver:1.2>
-        Show certificate information from remote host
+        Show certificate information from remote host, use tlsver to set spesific tls version
   -export-p12  <cert> <private-key> <ca-cert>
         Generate client.p12 pem file containing certificate, private key and ca certificate
   -match  <private-key> <cert>
