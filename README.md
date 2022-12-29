@@ -34,7 +34,7 @@ Flags:
         Generate intermediate certificate
   -read  <filename>
         Read certificate information from file server.local.pem
-  -connect  <host:443>
+  -connect  <host:443> <tlsver:1.2>
         Show certificate information from remote host
   -export-p12  <cert> <private-key> <ca-cert>
         Generate client.p12 pem file containing certificate, private key and ca certificate
