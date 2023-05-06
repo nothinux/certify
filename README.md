@@ -40,8 +40,31 @@ Flags:
         Generate client.p12 pem file containing certificate, private key and ca certificate
   -match  <private-key> <cert>
         Verify cert-key.pem and cert.pem has same public key
+  -interactive
+        Run certify interactively
   -version
         print certify version
+```
+
+Create Certificate with CN nothinux and expiry 30 days
+```
+# create CA
+$ certify init
+
+# create Certificate
+$ certify cn:nothinux expiry:30d
+```
+
+Create Certificate interactively
+```
+$ certify --interactive
+```
+
+Read Certificate
+```
+$ certify -read ca-cert.pem
+or
+$ cat ca-cert.pem | certify -read
 ```
 
 ## Use Certify as library
