@@ -57,7 +57,7 @@ $ certify cn:nothinux expiry:30d
 
 Create Certificate interactively
 ```
-$ certify --interactive
+$ certify -interactive
 ```
 
 Read Certificate
