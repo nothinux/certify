@@ -34,6 +34,8 @@ Flags:
 	Generate client.p12 pem file containing certificate, private key and ca certificate
   -match  <private-key> <cert>
 	Verify cert-key.pem and cert.pem has same public key
+  -interactive
+    Run certify interactively
   -version
 	print certify version
 `
@@ -61,6 +63,7 @@ func runMain() error {
 		ver          = flag.Bool("version", false, "see program version")
 		connect      = flag.Bool("connect", false, "show information about certificate on remote host")
 		epkcs12      = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
+		interactive  = flag.Bool("interactive", false, "run certify interactively")
 	)
 
 	flag.Usage = func() {
@@ -104,6 +107,10 @@ func runMain() error {
 			return err
 		}
 		return nil
+	}
+
+	if *interactive {
+		return runWizard()
 	}
 
 	if *epkcs12 {
