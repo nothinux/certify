@@ -147,22 +147,24 @@ func CertInfo(cert *x509.Certificate) string {
 	}
 
 	buf.WriteString(fmt.Sprintf("%8sX509v3 extensions:\n", ""))
-	buf.WriteString(fmt.Sprintf("%12sX509v3 Extended Key Usage:\n", ""))
-	buf.WriteString(fmt.Sprintf("%16s%v\n", "", parseExtKeyUsage(cert.ExtKeyUsage)))
-	buf.WriteString(fmt.Sprintf("%8sX509v3 Basic Constraints:\n", ""))
-	buf.WriteString(fmt.Sprintf("%12sCA: %v\n", "", cert.IsCA))
+	if len(parseExtKeyUsage(cert.ExtKeyUsage)) != 0 {
+		buf.WriteString(fmt.Sprintf("%12sX509v3 Extended Key Usage:\n", ""))
+		buf.WriteString(fmt.Sprintf("%16s%v\n", "", parseExtKeyUsage(cert.ExtKeyUsage)))
+	}
+	buf.WriteString(fmt.Sprintf("%12sX509v3 Basic Constraints:\n", ""))
+	buf.WriteString(fmt.Sprintf("%16sCA: %v\n", "", cert.IsCA))
 
 	if len(cert.IPAddresses) != 0 || len(cert.DNSNames) != 0 {
-		buf.WriteString(fmt.Sprintf("%8sX509v3 Subject Alternative Name:\n", ""))
+		buf.WriteString(fmt.Sprintf("%12sX509v3 Subject Alternative Name:\n", ""))
 		if len(cert.IPAddresses) != 0 {
 			var ips []string
 			for _, ip := range cert.IPAddresses {
 				ips = append(ips, ip.String())
 			}
-			buf.WriteString(fmt.Sprintf("%12sIP Address: %v\n", "", strings.Join(ips, ", ")))
+			buf.WriteString(fmt.Sprintf("%16sIP Address: %v\n", "", strings.Join(ips, ", ")))
 		}
 		if len(cert.DNSNames) != 0 {
-			buf.WriteString(fmt.Sprintf("%12sDNS: %v\n", "", strings.Join(cert.DNSNames, ", ")))
+			buf.WriteString(fmt.Sprintf("%16sDNS: %v\n", "", strings.Join(cert.DNSNames, ", ")))
 		}
 	}
 

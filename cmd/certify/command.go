@@ -30,10 +30,6 @@ func readCertificate(args []string, stdin *os.File) (string, error) {
 	var err error
 
 	if len(args) < 3 {
-		if err := isPipe(stdin); err != nil {
-			return "", err
-		}
-
 		certByte, err = io.ReadAll(stdin)
 		if err != nil {
 			return "", err
