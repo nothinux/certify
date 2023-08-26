@@ -541,61 +541,49 @@ func TestParseTLSVersion(t *testing.T) {
 	tests := []struct {
 		Name           string
 		Args           []string
-		ExpectedConfig *tls.Config
+		ExpectedConfig uint16
 		ExpectedErr    error
 	}{
 		{
-			Name: "Test using tls version 1.0",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.0"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS10,
-				MaxVersion: tls.VersionTLS10,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.0",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.0"},
+			ExpectedConfig: tls.VersionTLS10,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.1",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS11,
-				MaxVersion: tls.VersionTLS11,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.1",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
+			ExpectedConfig: tls.VersionTLS11,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.2",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.2"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				MaxVersion: tls.VersionTLS12,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.2",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.2"},
+			ExpectedConfig: tls.VersionTLS12,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.3",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.3"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS13,
-				MaxVersion: tls.VersionTLS13,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.3",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.3"},
+			ExpectedConfig: tls.VersionTLS13,
+			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test using not available tls version",
 			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.4"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test using not available tls version",
 			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:sslv3"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test without provide tls version",
 			Args:           []string{"certify", "-connect", "google.com:443"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 	}
