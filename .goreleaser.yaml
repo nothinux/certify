@@ -32,4 +32,4 @@ brews:
       owner: nothinux
       name: homebrew-tools
       branch: main
-      token: "{{ .Env.GITHUB_PERSONAL_AUTH_TOKEN }}"
+      token: "{{ .Env.TAP_TOKEN }}"
