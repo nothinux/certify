@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/nothinux/certify"
@@ -55,7 +58,27 @@ func readRemoteCertificate(args []string) (string, error) {
 		return "", fmt.Errorf("you must provide remote host")
 	}
 
-	tlsConfig := parseTLSVersion(args)
+	tlsConfig := &tls.Config{}
+
+	tlsVer := parseTLSVersion(args)
+	tlsConfig.MinVersion = tlsVer
+	tlsConfig.MaxVersion = tlsVer
+	tlsConfig.InsecureSkipVerify = parseInsecureArg(args)
+
+	caPath := parseCAarg(args)
+	if caPath != "" {
+		caCert, err := os.ReadFile(caPath)
+		if err != nil {
+			log.Printf("ca-cert error %v, ignoring the ca-cert\n", err)
+		}
+
+		if err == nil {
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+
+			tlsConfig.RootCAs = caCertPool
+		}
+	}
 
 	result, err := tlsDial(args[2], tlsConfig)
 	if err != nil {
