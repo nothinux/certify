@@ -598,3 +598,66 @@ func TestParseTLSVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestParseInsecureArg(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Args     []string
+		Expected bool
+	}{
+		{
+			Name:     "Test using insecure arg enabled",
+			Args:     []string{"certify", "-connect", "google.com:443", "insecure"},
+			Expected: true,
+		},
+		{
+			Name:     "Test without insecure flag",
+			Args:     []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
+			Expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			config := parseInsecureArg(tt.Args)
+
+			if !reflect.DeepEqual(config, tt.Expected) {
+				t.Fatalf("got %v, want %v", config, tt.Expected)
+			}
+		})
+	}
+}
+
+func TestParseCAArg(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Args     []string
+		Expected string
+	}{
+		{
+			Name:     "Test with ca arg",
+			Args:     []string{"certify", "-connect", "google.com:443", "with-ca:/tmp/ca-cert.pem"},
+			Expected: "/tmp/ca-cert.pem",
+		},
+		{
+			Name:     "Test with ca arg without value",
+			Args:     []string{"certify", "-connect", "google.com:443", "with-ca:"},
+			Expected: "",
+		},
+		{
+			Name:     "Test without ca arg",
+			Args:     []string{"certify", "-connect", "google.com:443"},
+			Expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			config := parseCAarg(tt.Args)
+
+			if !reflect.DeepEqual(config, tt.Expected) {
+				t.Fatalf("got %v, want %v", config, tt.Expected)
+			}
+		})
+	}
+}
