@@ -428,36 +428,51 @@ func isExist(path string) bool {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
-func parseTLSVersion(args []string) *tls.Config {
+func parseTLSVersion(args []string) uint16 {
 	for _, arg := range args[1:] {
 		if strings.Contains(arg, "tlsver:") {
 			ver := strings.Split(arg, ":")[1]
-			return setTLSVersion(ver)
+			return getTLSVersion(ver)
 		}
 	}
 
 	log.Println("use default settings ...")
-	return &tls.Config{}
+	return tls.VersionTLS12
 }
 
-func setTLSVersion(ver string) *tls.Config {
-	tlsConfig := &tls.Config{}
-
-	if ver == "1.0" {
-		tlsConfig.MinVersion = tls.VersionTLS10
-		tlsConfig.MaxVersion = tls.VersionTLS10
-	} else if ver == "1.1" {
-		tlsConfig.MinVersion = tls.VersionTLS11
-		tlsConfig.MaxVersion = tls.VersionTLS11
-	} else if ver == "1.2" {
-		tlsConfig.MinVersion = tls.VersionTLS12
-		tlsConfig.MaxVersion = tls.VersionTLS12
-	} else if ver == "1.3" {
-		tlsConfig.MinVersion = tls.VersionTLS13
-		tlsConfig.MaxVersion = tls.VersionTLS13
+func parseInsecureArg(args []string) bool {
+	for _, arg := range args[1:] {
+		if strings.Contains(arg, "insecure") {
+			return true
+		}
 	}
 
-	return tlsConfig
+	return false
+}
+
+func parseCAarg(args []string) string {
+	for _, arg := range args[1:] {
+		if strings.Contains(arg, "with-ca:") {
+			// return ca path
+			return strings.Split(arg, ":")[1]
+		}
+	}
+
+	return ""
+}
+
+func getTLSVersion(ver string) uint16 {
+	if ver == "1.0" {
+		return tls.VersionTLS10
+	} else if ver == "1.1" {
+		return tls.VersionTLS11
+	} else if ver == "1.2" {
+		return tls.VersionTLS12
+	} else if ver == "1.3" {
+		return tls.VersionTLS13
+	}
+
+	return tls.VersionTLS12
 }
 
 func tlsDial(host string, tlsConfig *tls.Config) (*x509.Certificate, error) {

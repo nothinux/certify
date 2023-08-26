@@ -541,61 +541,49 @@ func TestParseTLSVersion(t *testing.T) {
 	tests := []struct {
 		Name           string
 		Args           []string
-		ExpectedConfig *tls.Config
+		ExpectedConfig uint16
 		ExpectedErr    error
 	}{
 		{
-			Name: "Test using tls version 1.0",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.0"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS10,
-				MaxVersion: tls.VersionTLS10,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.0",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.0"},
+			ExpectedConfig: tls.VersionTLS10,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.1",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS11,
-				MaxVersion: tls.VersionTLS11,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.1",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
+			ExpectedConfig: tls.VersionTLS11,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.2",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.2"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				MaxVersion: tls.VersionTLS12,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.2",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.2"},
+			ExpectedConfig: tls.VersionTLS12,
+			ExpectedErr:    nil,
 		},
 		{
-			Name: "Test using tls version 1.3",
-			Args: []string{"certify", "-connect", "google.com:443", "tlsver:1.3"},
-			ExpectedConfig: &tls.Config{
-				MinVersion: tls.VersionTLS13,
-				MaxVersion: tls.VersionTLS13,
-			},
-			ExpectedErr: nil,
+			Name:           "Test using tls version 1.3",
+			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.3"},
+			ExpectedConfig: tls.VersionTLS13,
+			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test using not available tls version",
 			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:1.4"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test using not available tls version",
 			Args:           []string{"certify", "-connect", "google.com:443", "tlsver:sslv3"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 		{
 			Name:           "Test without provide tls version",
 			Args:           []string{"certify", "-connect", "google.com:443"},
-			ExpectedConfig: &tls.Config{},
+			ExpectedConfig: tls.VersionTLS12,
 			ExpectedErr:    nil,
 		},
 	}
@@ -606,6 +594,69 @@ func TestParseTLSVersion(t *testing.T) {
 
 			if !reflect.DeepEqual(config, tt.ExpectedConfig) {
 				t.Fatalf("got %v, want %v", config, tt.ExpectedConfig)
+			}
+		})
+	}
+}
+
+func TestParseInsecureArg(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Args     []string
+		Expected bool
+	}{
+		{
+			Name:     "Test using insecure arg enabled",
+			Args:     []string{"certify", "-connect", "google.com:443", "insecure"},
+			Expected: true,
+		},
+		{
+			Name:     "Test without insecure flag",
+			Args:     []string{"certify", "-connect", "google.com:443", "tlsver:1.1"},
+			Expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			config := parseInsecureArg(tt.Args)
+
+			if !reflect.DeepEqual(config, tt.Expected) {
+				t.Fatalf("got %v, want %v", config, tt.Expected)
+			}
+		})
+	}
+}
+
+func TestParseCAArg(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Args     []string
+		Expected string
+	}{
+		{
+			Name:     "Test with ca arg",
+			Args:     []string{"certify", "-connect", "google.com:443", "with-ca:/tmp/ca-cert.pem"},
+			Expected: "/tmp/ca-cert.pem",
+		},
+		{
+			Name:     "Test with ca arg without value",
+			Args:     []string{"certify", "-connect", "google.com:443", "with-ca:"},
+			Expected: "",
+		},
+		{
+			Name:     "Test without ca arg",
+			Args:     []string{"certify", "-connect", "google.com:443"},
+			Expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			config := parseCAarg(tt.Args)
+
+			if !reflect.DeepEqual(config, tt.Expected) {
+				t.Fatalf("got %v, want %v", config, tt.Expected)
 			}
 		})
 	}
