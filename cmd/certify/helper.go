@@ -65,7 +65,7 @@ func generateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
 		return err
 	}
 
-	return store(crl, caCRLPath)
+	return store(crl.String(), caCRLPath)
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
