@@ -22,7 +22,7 @@ func TestCreateCRL(t *testing.T) {
 
 	ski := sha1.Sum(b)
 
-	template := &Certificate{
+	template := Certificate{
 		Subject: pkix.Name{
 			Organization: []string{"certify"},
 			CommonName:   "certify",
@@ -38,7 +38,9 @@ func TestCreateCRL(t *testing.T) {
 	}
 
 	t.Run("Test Create CRL with cert that doesn't have keyUsage", func(t *testing.T) {
-		caCert, err := template.GetCertificate(pkey.PrivateKey)
+		template1 := template
+
+		caCert, err := template1.GetCertificate(pkey.PrivateKey)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -50,9 +52,10 @@ func TestCreateCRL(t *testing.T) {
 	})
 
 	t.Run("Test Create CRL", func(t *testing.T) {
-		template.KeyUsage = x509.KeyUsageCRLSign
+		template2 := template
+		template2.KeyUsage = x509.KeyUsageCRLSign
 
-		caCert, err := template.GetCertificate(pkey.PrivateKey)
+		caCert, err := template2.GetCertificate(pkey.PrivateKey)
 		if err != nil {
 			t.Fatal(err)
 		}
