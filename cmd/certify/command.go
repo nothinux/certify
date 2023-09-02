@@ -19,11 +19,18 @@ func initCA(args []string) error {
 	}
 	fmt.Println("CA private key file generated", caKeyPath)
 
-	if err := generateCA(pkey.PrivateKey, args, caPath); err != nil {
+	caCert, err := generateCA(pkey.PrivateKey, args, caPath)
+	if err != nil {
 		return err
 	}
 
 	fmt.Println("CA certificate file generated", caPath)
+
+	if err := generateCRL(pkey.PrivateKey, caCert.Cert); err != nil {
+		return err
+	}
+	fmt.Println("CRL file generated", caCRLPath)
+
 	return nil
 }
 

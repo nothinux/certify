@@ -43,6 +43,7 @@ Flags:
 var (
 	caPath         = "ca-cert.pem"
 	caKeyPath      = "ca-key.pem"
+	caCRLPath      = "ca-crl.pem"
 	caInterPath    = "ca-intermediate.pem"
 	caInterKeyPath = "ca-intermediate-key.pem"
 	Version        = "No version provided"

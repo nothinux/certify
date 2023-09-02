@@ -38,6 +38,7 @@ func TestRunMain(t *testing.T) {
 
 				os.Remove(caPath)
 				os.Remove(caKeyPath)
+				os.Remove(caCRLPath)
 			},
 		},
 		{
@@ -54,6 +55,7 @@ func TestRunMain(t *testing.T) {
 
 				os.Remove(caPath)
 				os.Remove(caKeyPath)
+				os.Remove(caCRLPath)
 			},
 		},
 		{
@@ -138,6 +140,7 @@ func TestRunMain(t *testing.T) {
 
 				os.Remove(caPath)
 				os.Remove(caKeyPath)
+				os.Remove(caCRLPath)
 				os.Remove(caInterPath)
 				os.Remove(caInterKeyPath)
 			},
@@ -162,6 +165,7 @@ func TestRunMain(t *testing.T) {
 
 				os.Remove(caPath)
 				os.Remove(caKeyPath)
+				os.Remove(caCRLPath)
 				os.Remove("nothinux.pem")
 				os.Remove("nothinux-key.pem")
 			},
