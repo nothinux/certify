@@ -59,6 +59,31 @@ func readCertificate(args []string, stdin *os.File) (string, error) {
 	return certify.CertInfo(cert), nil
 }
 
+// readCRL read crl from stdin or from file
+func readCRL(args []string, stdin *os.File) (string, error) {
+	var certByte []byte
+	var err error
+
+	if len(args) < 3 {
+		certByte, err = io.ReadAll(stdin)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		certByte, err = os.ReadFile(args[2])
+		if err != nil {
+			return "", err
+		}
+	}
+
+	crl, err := certify.ParseCRL(certByte)
+	if err != nil {
+		return "", err
+	}
+
+	return certify.CRLInfo(crl), nil
+}
+
 // readRemoteCertificate read certificate from remote host
 func readRemoteCertificate(args []string) (string, error) {
 	if len(args) < 3 {

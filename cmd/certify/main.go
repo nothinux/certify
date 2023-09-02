@@ -27,7 +27,9 @@ Flags:
   -intermediate
 	Generate intermediate certificate
   -read  <filename>
-	Read certificate information from file server.local.pem
+	Read certificate information from file or stdin
+  -read-crl <filename>
+    Read certificate revocation list from file or stdin
   -connect  <host:443> <tlsver:1.2> <insecure> <with-ca:ca-path>
 	Show certificate information from remote host, use tlsver to set spesific tls version
   -export-p12  <cert> <private-key> <ca-cert>
@@ -60,6 +62,7 @@ func runMain() error {
 		initialize   = flag.Bool("init", false, "initialize new root CA Certificate and Key")
 		intermediate = flag.Bool("intermediate", false, "create intermediate certificate")
 		read         = flag.Bool("read", false, "read information from certificate")
+		readcrl      = flag.Bool("read-crl", false, "read information from certificate revocation list")
 		match        = flag.Bool("match", false, "check if private key match with certificate")
 		ver          = flag.Bool("version", false, "see program version")
 		connect      = flag.Bool("connect", false, "show information about certificate on remote host")
@@ -91,6 +94,15 @@ func runMain() error {
 			return err
 		}
 		fmt.Printf("%s", cert)
+		return nil
+	}
+
+	if *readcrl {
+		crl, err := readCRL(os.Args, os.Stdin)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s", crl)
 		return nil
 	}
 

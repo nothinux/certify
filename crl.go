@@ -7,7 +7,9 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
+	"strings"
 	"time"
 )
 
@@ -45,4 +47,44 @@ func (c *CertRevocationList) String() string {
 	}
 
 	return w.String()
+}
+
+func ParseCRL(crl []byte) (*x509.RevocationList, error) {
+	c, _ := pem.Decode(crl)
+	if c == nil {
+		return nil, fmt.Errorf("no pem data")
+	}
+
+	return x509.ParseRevocationList(c.Bytes)
+}
+
+func CRLInfo(rl *x509.RevocationList) string {
+	var buf bytes.Buffer
+
+	buf.WriteString("Certificate Revocation List (CRL):\n")
+	buf.WriteString(fmt.Sprintf("%4sVersion \n", ""))
+	buf.WriteString(fmt.Sprintf("%4sSignature Algorithm: %v\n", "", rl.SignatureAlgorithm))
+
+	buf.WriteString(fmt.Sprintf("%4sIssuer: %v\n", "", strings.Replace(rl.Issuer.String(), ",", ", ", -1)))
+	buf.WriteString(fmt.Sprintf("%8sLastUpdate: %v\n", "", rl.ThisUpdate.Format("Jan 2 15:04:05 2006 GMT")))
+	buf.WriteString(fmt.Sprintf("%8sNextUpdate: %v\n", "", rl.NextUpdate.Format("Jan 2 15:04:05 2006 GMT")))
+
+	buf.WriteString(fmt.Sprintf("%8sCRL Extensions:\n", ""))
+	buf.WriteString(fmt.Sprintf("%12sX509v3 Authority Key Identifier:\n", ""))
+	buf.WriteString(fmt.Sprintf("%16s%s\n", "", formatKeyIDWithColon(rl.AuthorityKeyId)))
+	buf.WriteString(fmt.Sprintf("%12sX509v3 CRL Number:\n", ""))
+	buf.WriteString(fmt.Sprintf("%16s%s\n", "", rl.Number))
+
+	if len(rl.RevokedCertificateEntries) == 0 {
+		buf.WriteString("No Revoked Certificates\n")
+		return buf.String()
+	}
+
+	buf.WriteString("Revoked Certificates:\n")
+	for _, rc := range rl.RevokedCertificateEntries {
+		buf.WriteString(fmt.Sprintf("%4sSerial Number: %s\n", "", formatKeyIDWithColon(rc.SerialNumber.Bytes())))
+		buf.WriteString(fmt.Sprintf("%8sRevocation Date: %s\n", "", rc.RevocationTime.Format("Jan 2 15:04:05 2006 GMT")))
+	}
+
+	return buf.String()
 }
