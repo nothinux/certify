@@ -37,6 +37,18 @@ func TestCreateCRL(t *testing.T) {
 		},
 	}
 
+	t.Run("Test Create CRL with cert that doesn't have keyUsage", func(t *testing.T) {
+		caCert, err := template.GetCertificate(pkey.PrivateKey)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
+		if err == nil {
+			t.Fatalf("this should be error, because the cert doesn't have keyUsage")
+		}
+	})
+
 	t.Run("Test Create CRL", func(t *testing.T) {
 		template.KeyUsage = x509.KeyUsageCRLSign
 
@@ -49,18 +61,5 @@ func TestCreateCRL(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	})
-
-	t.Run("Test Create CRL with cert that doesn't have keyUsage", func(t *testing.T) {
-		caCert, err := template.GetCertificate(pkey.PrivateKey)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
-		if err == nil {
-			t.Fatalf("this should be error, because the cert doesn't have keyUsage")
-		}
-
 	})
 }
