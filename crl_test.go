@@ -22,7 +22,7 @@ func TestCreateCRL(t *testing.T) {
 
 	ski := sha1.Sum(b)
 
-	template := Certificate{
+	template := &Certificate{
 		Subject: pkix.Name{
 			Organization: []string{"certify"},
 			CommonName:   "certify",
@@ -30,7 +30,6 @@ func TestCreateCRL(t *testing.T) {
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().Add(24 * time.Hour),
 		IsCA:         true,
-		KeyUsage:     x509.KeyUsageCRLSign,
 		SubjectKeyId: ski[:],
 		DNSNames:     []string{"github.com"},
 		IPAddress: []net.IP{
@@ -38,13 +37,30 @@ func TestCreateCRL(t *testing.T) {
 		},
 	}
 
-	caCert, err := template.GetCertificate(pkey.PrivateKey)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("Test Create CRL", func(t *testing.T) {
+		template.KeyUsage = x509.KeyUsageCRLSign
 
-	_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
-	if err != nil {
-		t.Fatal(err)
-	}
+		caCert, err := template.GetCertificate(pkey.PrivateKey)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("Test Create CRL with cert that doesn't have keyUsage", func(t *testing.T) {
+		caCert, err := template.GetCertificate(pkey.PrivateKey)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
+		if err == nil {
+			t.Fatalf("this should be error, because the cert doesn't have keyUsage")
+		}
+
+	})
 }
