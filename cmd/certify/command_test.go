@@ -247,6 +247,7 @@ func TestCreateCertificate(t *testing.T) {
 	t.Cleanup(func() {
 		os.Remove(caPath)
 		os.Remove(caKeyPath)
+		os.Remove(caCRLPath)
 		os.Remove("nothinux.local.pem")
 		os.Remove("nothinux.local-key.pem")
 	})
@@ -266,6 +267,7 @@ func TestCreateIntermediateCertificate(t *testing.T) {
 	t.Cleanup(func() {
 		os.Remove(caPath)
 		os.Remove(caKeyPath)
+		os.Remove(caCRLPath)
 		os.Remove(caInterPath)
 		os.Remove(caInterKeyPath)
 	})
