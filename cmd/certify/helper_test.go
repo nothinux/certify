@@ -16,7 +16,7 @@ func TestGeneratePrivateKeyAndCA(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := generateCA(pkey.PrivateKey, []string{"cn:local"}, caPath); err != nil {
+	if _, err := generateCA(pkey.PrivateKey, []string{"cn:local"}, caPath); err != nil {
 		t.Fatal(err)
 	}
 

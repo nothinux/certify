@@ -72,6 +72,7 @@ func TestInitCA(t *testing.T) {
 			t.Cleanup(func() {
 				os.Remove(caPath)
 				os.Remove(caKeyPath)
+				os.Remove(caCRLPath)
 			})
 		})
 	}

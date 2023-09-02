@@ -17,6 +17,7 @@ import (
 
 // Certificate hold certificate information
 type Certificate struct {
+	SerialNumber     *big.Int
 	Subject          pkix.Name
 	NotBefore        time.Time
 	NotAfter         time.Time
@@ -25,12 +26,15 @@ type Certificate struct {
 	IsCA             bool
 	Parent           *x509.Certificate
 	ParentPrivateKey interface{}
+	KeyUsage         x509.KeyUsage
 	ExtentedKeyUsage []x509.ExtKeyUsage
+	SubjectKeyId     []byte
 }
 
 // Result hold created certificate in []byte format
 type Result struct {
-	Certificate []byte
+	ByteCert []byte
+	Cert     *x509.Certificate
 }
 
 // GetSerial returns serial and an error
@@ -44,17 +48,19 @@ func GetSerial() (*big.Int, error) {
 }
 
 // SetTemplate set template for x509.Certificate from given Certificate struct
-func (c *Certificate) SetTemplate(serial *big.Int) x509.Certificate {
+func (c *Certificate) SetTemplate() x509.Certificate {
 	return x509.Certificate{
-		SerialNumber:          serial,
+		SerialNumber:          c.SerialNumber,
 		Subject:               c.Subject,
 		NotBefore:             c.NotBefore,
 		NotAfter:              c.NotAfter,
 		ExtKeyUsage:           c.ExtentedKeyUsage,
+		KeyUsage:              c.KeyUsage,
 		IsCA:                  c.IsCA,
 		IPAddresses:           c.IPAddress,
 		DNSNames:              c.DNSNames,
 		BasicConstraintsValid: true,
+		SubjectKeyId:          c.SubjectKeyId,
 	}
 }
 
@@ -65,7 +71,8 @@ func (c *Certificate) GetCertificate(pkey *ecdsa.PrivateKey) (*Result, error) {
 		return nil, err
 	}
 
-	template := c.SetTemplate(serial)
+	c.SerialNumber = serial
+	template := c.SetTemplate()
 
 	if c.Parent == nil {
 		c.Parent = &template
@@ -80,7 +87,7 @@ func (c *Certificate) GetCertificate(pkey *ecdsa.PrivateKey) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{Certificate: der}, nil
+	return &Result{ByteCert: der, Cert: c.Parent}, nil
 }
 
 // String returns certificate in string format
@@ -89,7 +96,7 @@ func (r *Result) String() string {
 
 	if err := pem.Encode(&w, &pem.Block{
 		Type:  "CERTIFICATE",
-		Bytes: r.Certificate,
+		Bytes: r.ByteCert,
 	}); err != nil {
 		return ""
 	}

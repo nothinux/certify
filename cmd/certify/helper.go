@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -28,25 +29,43 @@ func generatePrivateKey(path string) (*certify.PrivateKey, error) {
 	return p, store(p.String(), path)
 }
 
-func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) error {
+func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Result, error) {
 	_, _, cn, org, expiry, _ := parseArgs(args)
+
+	b, err := x509.MarshalPKIXPublicKey(&pkey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	ski := sha1.Sum(b)
 
 	template := certify.Certificate{
 		Subject: pkix.Name{
 			Organization: []string{org},
 			CommonName:   cn,
 		},
-		NotBefore: time.Now(),
-		NotAfter:  expiry,
-		IsCA:      true,
+		NotBefore:    time.Now(),
+		NotAfter:     expiry,
+		IsCA:         true,
+		KeyUsage:     x509.KeyUsageCRLSign,
+		SubjectKeyId: ski[:],
 	}
 
 	caCert, err := template.GetCertificate(pkey)
 	if err != nil {
+		return nil, err
+	}
+
+	return caCert, store(caCert.String(), path)
+}
+
+func generateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
+	crl, err := certify.CreateCRL(pkey, caCert)
+	if err != nil {
 		return err
 	}
 
-	return store(caCert.String(), path)
+	return store(crl, caCRLPath)
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
