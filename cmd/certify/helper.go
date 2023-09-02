@@ -447,6 +447,16 @@ func isExist(path string) bool {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
+func isCRLFile(args []string) bool {
+	for _, arg := range args {
+		if strings.Contains(arg, "crl") {
+			return true
+		}
+	}
+
+	return false
+}
+
 func parseTLSVersion(args []string) uint16 {
 	for _, arg := range args[1:] {
 		if strings.Contains(arg, "tlsver:") {

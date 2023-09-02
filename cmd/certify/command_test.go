@@ -144,6 +144,56 @@ func TestReadCertificate(t *testing.T) {
 	}
 }
 
+func TestReadCRL(t *testing.T) {
+	// TODO: add test reading certificate from stdin
+	tests := []struct {
+		Name           string
+		Args           []string
+		Stdin          *os.File
+		expectedOutput string
+		expectedError  string
+	}{
+		{
+			Name:           "Test read crl from file",
+			Args:           []string{"certify", "-read-crl", "testdata/ca-crl.pem"},
+			Stdin:          nil,
+			expectedOutput: "Issuer: CN=certify, O=certify",
+		},
+		{
+			Name:          "Test read not exists crl",
+			Args:          []string{"certify", "-read", "ca-crl.pem"},
+			Stdin:         nil,
+			expectedError: "open ca-crl.pem: no such file or directory",
+		},
+		{
+			Name:          "Test read content from stdin",
+			Args:          []string{"certify", "-read"},
+			Stdin:         getTestCertificate("testdata/empty"),
+			expectedError: "no pem data",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			crl, err := readCRL(tt.Args, tt.Stdin)
+
+			if err != nil {
+				if !strings.Contains(err.Error(), tt.expectedError) {
+					t.Fatalf("got %v, want %v", err, tt.expectedError)
+				}
+			}
+
+			if !strings.Contains(crl, tt.expectedOutput) {
+				t.Fatalf("error, want output %s", tt.expectedOutput)
+			}
+
+			if tt.Stdin != nil {
+				tt.Stdin.Close()
+			}
+		})
+	}
+}
+
 func TestReadRemoteCertificate(t *testing.T) {
 	tests := []struct {
 		Name           string

@@ -28,6 +28,44 @@ ox8WdlL3mozzen8QcdQ7jKiLgtJmFme8+E9gb5K3goFmPaaplizqd/yxNA==
 	}
 }
 
+func TestParseKeyUsage(t *testing.T) {
+	tests := []struct {
+		Name     string
+		KeyUsage x509.KeyUsage
+		Expected string
+	}{
+		{
+			Name:     "Test Cert Sign Key Usage",
+			KeyUsage: x509.KeyUsageCertSign,
+			Expected: "Cert Sign",
+		},
+		{
+			Name:     "Test CRL Sign Key Usage",
+			KeyUsage: x509.KeyUsageCRLSign,
+			Expected: "CRL Sign",
+		},
+		{
+			Name:     "Test Digital Signature Key Usage",
+			KeyUsage: x509.KeyUsageDigitalSignature,
+			Expected: "Digital Signature",
+		},
+		{
+			Name:     "Test other Key Usage",
+			KeyUsage: x509.KeyUsageEncipherOnly,
+			Expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			got := parseKeyUsage(tt.KeyUsage)
+			if got != tt.Expected {
+				t.Fatalf("got %v, want %v", got, tt.Expected)
+			}
+		})
+	}
+}
+
 func TestParseExtKeyUsage(t *testing.T) {
 	t.Run("Test single eku", func(t *testing.T) {
 		result := parseExtKeyUsage([]x509.ExtKeyUsage{

@@ -26,6 +26,19 @@ func GetPublicKey(pub interface{}) (string, error) {
 	return w.String(), err
 }
 
+func parseKeyUsage(ku x509.KeyUsage) string {
+	switch ku {
+	case x509.KeyUsageCRLSign:
+		return "CRL Sign"
+	case x509.KeyUsageCertSign:
+		return "Cert Sign"
+	case x509.KeyUsageDigitalSignature:
+		return "Digital Signature"
+	default:
+		return ""
+	}
+}
+
 func parseExtKeyUsage(ekus []x509.ExtKeyUsage) string {
 	var extku []string
 

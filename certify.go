@@ -158,8 +158,19 @@ func CertInfo(cert *x509.Certificate) string {
 		buf.WriteString(fmt.Sprintf("%12sX509v3 Extended Key Usage:\n", ""))
 		buf.WriteString(fmt.Sprintf("%16s%v\n", "", parseExtKeyUsage(cert.ExtKeyUsage)))
 	}
+
+	if cert.KeyUsage != 0 {
+		buf.WriteString(fmt.Sprintf("%12sX509v3 Key Usage:\n", ""))
+		buf.WriteString(fmt.Sprintf("%16s%v\n", "", parseKeyUsage(cert.KeyUsage)))
+	}
+
 	buf.WriteString(fmt.Sprintf("%12sX509v3 Basic Constraints:\n", ""))
 	buf.WriteString(fmt.Sprintf("%16sCA: %v\n", "", cert.IsCA))
+
+	if cert.SubjectKeyId != nil {
+		buf.WriteString(fmt.Sprintf("%12sX509v3 Subject Key Identifier:\n", ""))
+		buf.WriteString(fmt.Sprintf("%16s%v\n", "", formatKeyIDWithColon(cert.SubjectKeyId)))
+	}
 
 	if len(cert.IPAddresses) != 0 || len(cert.DNSNames) != 0 {
 		buf.WriteString(fmt.Sprintf("%12sX509v3 Subject Alternative Name:\n", ""))
