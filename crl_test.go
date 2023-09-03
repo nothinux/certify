@@ -73,7 +73,7 @@ func TestCreateCRL(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
+		_, _, err = CreateCRL(pkey.PrivateKey, caCert.Cert, nil)
 		if err == nil {
 			t.Fatalf("this should be error, because the cert doesn't have keyUsage")
 		}
@@ -88,7 +88,7 @@ func TestCreateCRL(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err = CreateCRL(pkey.PrivateKey, caCert.Cert)
+		_, _, err = CreateCRL(pkey.PrivateKey, caCert.Cert, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

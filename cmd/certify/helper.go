@@ -60,7 +60,7 @@ func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Re
 }
 
 func generateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
-	crl, err := certify.CreateCRL(pkey, caCert)
+	crl, _, err := certify.CreateCRL(pkey, caCert, nil)
 	if err != nil {
 		return err
 	}
@@ -445,16 +445,6 @@ func isExist(path string) bool {
 	_, err := os.Stat(path)
 
 	return !errors.Is(err, os.ErrNotExist)
-}
-
-func isCRLFile(args []string) bool {
-	for _, arg := range args {
-		if strings.Contains(arg, "crl") {
-			return true
-		}
-	}
-
-	return false
 }
 
 func parseTLSVersion(args []string) uint16 {
