@@ -130,7 +130,8 @@ func runMain() error {
 	}
 
 	if *revoke {
-		return revokeCertificate(os.Args)
+		_, err := revokeCertificate(os.Args)
+		return err
 	}
 
 	if *epkcs12 {

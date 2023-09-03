@@ -185,44 +185,46 @@ func createCertificate(args []string) error {
 	return nil
 }
 
-func revokeCertificate(args []string) error {
+func revokeCertificate(args []string) (string, error) {
 	if len(args) < 4 {
-		return fmt.Errorf("you need to provide cert file and crl file")
+		return "", fmt.Errorf("you need to provide cert file and crl file")
 	}
 
 	certByte, err := os.ReadFile(args[2])
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	crlBytes, err := os.ReadFile(args[3])
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	cert, err := certify.ParseCertificate(certByte)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	caCert, err := getCACert(caPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	pkey, err := getCAPrivateKey(caKeyPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fmt.Printf("revoking certificate cn=%s o=%s with serial number %s\n", cert.Subject.CommonName, cert.Subject.Organization, cert.SerialNumber)
 	crl, crlNum, err := certify.RevokeCertificate(crlBytes, cert, caCert, pkey)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	fmt.Printf("CA CRL file generated ca-crl-%s.pem\n", crlNum)
-	return store(crl.String(), fmt.Sprintf("ca-crl-%s.pem", crlNum))
+	path := fmt.Sprintf("ca-crl-%s.pem", crlNum)
+
+	fmt.Printf("CA CRL file generated %s\n", path)
+	return path, store(crl.String(), path)
 }
 
 // createIntermediateCertificate generate intermediate certificate and signed with existing root CA
