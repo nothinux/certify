@@ -194,6 +194,71 @@ func TestReadCRL(t *testing.T) {
 	}
 }
 
+func TestRevokeCertificate(t *testing.T) {
+	// TODO: add test reading certificate from stdin
+	tests := []struct {
+		Name           string
+		Args           []string
+		Stdin          *os.File
+		expectedOutput string
+		expectedError  string
+	}{
+		{
+			Name:  "Test revoke certificate",
+			Args:  []string{"certify", "-revoke", "nothinux.local.pem", "ca-crl.pem"},
+			Stdin: nil,
+		},
+		{
+			Name:          "Test revoke certificate with not enough argument",
+			Args:          []string{"certify", "-revoke", "ca-crl.pem"},
+			Stdin:         nil,
+			expectedError: "you need to provide cert file and crl file",
+		},
+		{
+			Name:          "Test revoke certificate with wrong crl file",
+			Args:          []string{"certify", "-revoke", "nothinux.local.pem", "ca-cert.pem"},
+			Stdin:         nil,
+			expectedError: "x509: unsupported crl version",
+		},
+		{
+			Name:          "Test revoke certificate with wrong cert file",
+			Args:          []string{"certify", "-revoke", "ca-crl.pem", "ca-crl.pem"},
+			Stdin:         nil,
+			expectedError: "x509: malformed validity",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if err := initCA([]string{"certify", "-init"}); err != nil {
+				t.Fatal(err)
+			}
+
+			if err := createCertificate([]string{"certify", "nothinux.local"}); err != nil {
+				t.Fatal(err)
+			}
+
+			crlPath, err := revokeCertificate(tt.Args)
+			if err != nil {
+				if !strings.Contains(err.Error(), tt.expectedError) {
+					t.Fatalf("got %v, want %v", err, tt.expectedError)
+				}
+				cleanupfiles([]string{caPath, caKeyPath, caCRLPath, "nothinux.local.pem", "nothinux.local-key.pem"})
+				return
+			}
+
+			_, err = readCRL([]string{"certify", "-read-crl", crlPath}, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Cleanup(func() {
+				cleanupfiles([]string{caPath, caKeyPath, caCRLPath, crlPath, "nothinux.local.pem", "nothinux.local-key.pem"})
+			})
+		})
+	}
+}
+
 func TestReadRemoteCertificate(t *testing.T) {
 	tests := []struct {
 		Name           string

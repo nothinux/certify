@@ -38,6 +38,8 @@ Flags:
 	Verify cert-key.pem and cert.pem has same public key
   -interactive
     Run certify interactively
+  -revoke <ca-cert> <ca-private-key>
+    Revoke certificate, the certificate will be added to CRL
   -version
 	print certify version
 `
@@ -68,6 +70,7 @@ func runMain() error {
 		connect      = flag.Bool("connect", false, "show information about certificate on remote host")
 		epkcs12      = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 		interactive  = flag.Bool("interactive", false, "run certify interactively")
+		revoke       = flag.Bool("revoke", false, "Revoke certificate, the certificate will be added to CRL")
 	)
 
 	flag.Usage = func() {
@@ -124,6 +127,11 @@ func runMain() error {
 
 	if *interactive {
 		return runWizard()
+	}
+
+	if *revoke {
+		_, err := revokeCertificate(os.Args)
+		return err
 	}
 
 	if *epkcs12 {
