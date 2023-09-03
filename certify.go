@@ -29,6 +29,7 @@ type Certificate struct {
 	KeyUsage         x509.KeyUsage
 	ExtentedKeyUsage []x509.ExtKeyUsage
 	SubjectKeyId     []byte
+	AuthorityKeyId   []byte
 }
 
 // Result hold created certificate in []byte format
@@ -61,6 +62,7 @@ func (c *Certificate) SetTemplate() x509.Certificate {
 		DNSNames:              c.DNSNames,
 		BasicConstraintsValid: true,
 		SubjectKeyId:          c.SubjectKeyId,
+		AuthorityKeyId:        c.AuthorityKeyId,
 	}
 }
 

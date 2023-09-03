@@ -29,15 +29,23 @@ func generatePrivateKey(path string) (*certify.PrivateKey, error) {
 	return p, store(p.String(), path)
 }
 
-func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Result, error) {
-	_, _, cn, org, expiry, _ := parseArgs(args)
-
-	b, err := x509.MarshalPKIXPublicKey(&pkey.PublicKey)
+func getKeyIdentifier(publicKey *ecdsa.PublicKey) ([]byte, error) {
+	b, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	ski := sha1.Sum(b)
+	ki := sha1.Sum(b)
+	return ki[:], nil
+}
+
+func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Result, error) {
+	_, _, cn, org, expiry, _ := parseArgs(args)
+
+	ski, err := getKeyIdentifier(&pkey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
 
 	template := certify.Certificate{
 		Subject: pkix.Name{
@@ -47,8 +55,8 @@ func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Re
 		NotBefore:    time.Now(),
 		NotAfter:     expiry,
 		IsCA:         true,
-		KeyUsage:     x509.KeyUsageCRLSign,
-		SubjectKeyId: ski[:],
+		KeyUsage:     x509.KeyUsageCRLSign | x509.KeyUsageCertSign,
+		SubjectKeyId: ski,
 	}
 
 	caCert, err := template.GetCertificate(pkey)
@@ -102,6 +110,16 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 		}
 	}
 
+	aki, err := getKeyIdentifier(&parentKey.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	ski, err := getKeyIdentifier(&pkey.PublicKey)
+	if err != nil {
+		return err
+	}
+
 	template := certify.Certificate{
 		Subject: pkix.Name{
 			Organization: []string{org},
@@ -115,6 +133,9 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 		Parent:           parent,
 		ParentPrivateKey: parentKey,
 		ExtentedKeyUsage: ekus,
+		KeyUsage:         x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageDataEncipherment | x509.KeyUsageKeyAgreement,
+		AuthorityKeyId:   aki,
+		SubjectKeyId:     ski,
 	}
 
 	cert, err := template.GetCertificate(pkey)
