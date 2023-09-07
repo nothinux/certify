@@ -29,7 +29,7 @@ Flags:
   -read  <filename>
 	Read certificate information from file or stdin
   -read-crl <filename>
-    Read certificate revocation list from file or stdin
+	Read certificate revocation list from file or stdin
   -connect  <host:443> <tlsver:1.2> <insecure> <with-ca:ca-path>
 	Show certificate information from remote host, use tlsver to set spesific tls version
   -export-p12  <cert> <private-key> <ca-cert>
@@ -37,9 +37,11 @@ Flags:
   -match  <private-key> <cert>
 	Verify cert-key.pem and cert.pem has same public key
   -interactive
-    Run certify interactively
-  -revoke <ca-cert> <ca-private-key>
-    Revoke certificate, the certificate will be added to CRL
+	Run certify interactively
+  -revoke <certificate> <crl-file>
+	Revoke certificate, the certificate will be added to CRL
+  -verify-crl <certificate> <crl-file>
+	Check if the certificate was revoked
   -version
 	print certify version
 `
@@ -70,7 +72,8 @@ func runMain() error {
 		connect      = flag.Bool("connect", false, "show information about certificate on remote host")
 		epkcs12      = flag.Bool("export-p12", false, "export certificate and key to pkcs12 format")
 		interactive  = flag.Bool("interactive", false, "run certify interactively")
-		revoke       = flag.Bool("revoke", false, "Revoke certificate, the certificate will be added to CRL")
+		revoke       = flag.Bool("revoke", false, "revoke certificate, the certificate will be added to CRL")
+		verifycrl    = flag.Bool("verify-crl", false, "check if the certificate was revoked")
 	)
 
 	flag.Usage = func() {
@@ -132,6 +135,10 @@ func runMain() error {
 	if *revoke {
 		_, err := revokeCertificate(os.Args)
 		return err
+	}
+
+	if *verifycrl {
+		return verifyCertificate(os.Args)
 	}
 
 	if *epkcs12 {

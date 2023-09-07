@@ -185,14 +185,35 @@ func createCertificate(args []string) error {
 	return nil
 }
 
+func verifyCertificate(args []string) error {
+	if len(args) < 4 {
+		return fmt.Errorf("you need to provide cert file and crl file")
+	}
+
+	cert, err := readCertificateFile(args[2])
+	if err != nil {
+		return err
+	}
+
+	crl, err := readCRLFile(args[3])
+	if err != nil {
+		return err
+	}
+
+	for _, sn := range crl.RevokedCertificateEntries {
+		if sn.SerialNumber.Cmp(cert.SerialNumber) == 0 {
+			fmt.Printf("%s\ncode: %d\ncertificate revoked at %v\n", cert.Subject.String(), sn.ReasonCode, sn.RevocationTime.Format("2006-01-02 15:04:05"))
+			return nil
+		}
+	}
+
+	fmt.Printf("%s: OK\n", args[2])
+	return nil
+}
+
 func revokeCertificate(args []string) (string, error) {
 	if len(args) < 4 {
 		return "", fmt.Errorf("you need to provide cert file and crl file")
-	}
-
-	certByte, err := os.ReadFile(args[2])
-	if err != nil {
-		return "", err
 	}
 
 	crlBytes, err := os.ReadFile(args[3])
@@ -200,7 +221,7 @@ func revokeCertificate(args []string) (string, error) {
 		return "", err
 	}
 
-	cert, err := certify.ParseCertificate(certByte)
+	cert, err := readCertificateFile(args[2])
 	if err != nil {
 		return "", err
 	}
