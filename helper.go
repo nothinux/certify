@@ -26,17 +26,38 @@ func GetPublicKey(pub interface{}) (string, error) {
 	return w.String(), err
 }
 
-func parseKeyUsage(ku x509.KeyUsage) string {
-	switch ku {
-	case x509.KeyUsageCRLSign:
-		return "CRL Sign"
-	case x509.KeyUsageCertSign:
-		return "Cert Sign"
-	case x509.KeyUsageDigitalSignature:
-		return "Digital Signature"
-	default:
-		return ""
+func parseKeyUsage(ku x509.KeyUsage) []string {
+	usages := []string{}
+
+	if ku&x509.KeyUsageDigitalSignature > 0 {
+		usages = append(usages, "Digital Signature")
 	}
+	if ku&x509.KeyUsageContentCommitment > 0 {
+		usages = append(usages, "Content Commitment")
+	}
+	if ku&x509.KeyUsageDataEncipherment > 0 {
+		usages = append(usages, "Key Encipherment")
+	}
+	if ku&x509.KeyUsageDataEncipherment > 0 {
+		usages = append(usages, "Data Encipherment")
+	}
+	if ku&x509.KeyUsageKeyAgreement > 0 {
+		usages = append(usages, "Key Agreement")
+	}
+	if ku&x509.KeyUsageCertSign > 0 {
+		usages = append(usages, "Cert Sign")
+	}
+	if ku&x509.KeyUsageCRLSign > 0 {
+		usages = append(usages, "CRL Sign")
+	}
+	if ku&x509.KeyUsageEncipherOnly > 0 {
+		usages = append(usages, "Enchiper Only")
+	}
+	if ku&x509.KeyUsageDecipherOnly > 0 {
+		usages = append(usages, "Dechiper Only")
+	}
+
+	return usages
 }
 
 func parseExtKeyUsage(ekus []x509.ExtKeyUsage) string {

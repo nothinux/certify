@@ -3,6 +3,7 @@ package certify
 import (
 	"crypto/x509"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -32,34 +33,34 @@ func TestParseKeyUsage(t *testing.T) {
 	tests := []struct {
 		Name     string
 		KeyUsage x509.KeyUsage
-		Expected string
+		Expected []string
 	}{
 		{
-			Name:     "Test Cert Sign Key Usage",
-			KeyUsage: x509.KeyUsageCertSign,
-			Expected: "Cert Sign",
+			Name:     "Test Cert Sign and CRL Sign Key Usage",
+			KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+			Expected: []string{"Cert Sign", "CRL Sign"},
 		},
 		{
 			Name:     "Test CRL Sign Key Usage",
 			KeyUsage: x509.KeyUsageCRLSign,
-			Expected: "CRL Sign",
+			Expected: []string{"CRL Sign"},
 		},
 		{
 			Name:     "Test Digital Signature Key Usage",
 			KeyUsage: x509.KeyUsageDigitalSignature,
-			Expected: "Digital Signature",
+			Expected: []string{"Digital Signature"},
 		},
 		{
 			Name:     "Test other Key Usage",
-			KeyUsage: x509.KeyUsageEncipherOnly,
-			Expected: "",
+			KeyUsage: x509.KeyUsage(0),
+			Expected: []string{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
 			got := parseKeyUsage(tt.KeyUsage)
-			if got != tt.Expected {
+			if !reflect.DeepEqual(got, tt.Expected) {
 				t.Fatalf("got %v, want %v", got, tt.Expected)
 			}
 		})
