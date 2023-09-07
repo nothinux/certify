@@ -287,6 +287,11 @@ func TestVerifyCertificate(t *testing.T) {
 			Args:          []string{"certify", "-revoke", "ca-crl.pem", "ca-crl.pem"},
 			expectedError: "x509: malformed validity",
 		},
+		{
+			Name:          "Test verify certificate with revoked cert file",
+			Args:          []string{"certify", "-revoke", "nothinux.local.pem", "ca-crl.pem"},
+			expectedError: "error nothinux.local.pem verification failed",
+		},
 	}
 
 	for _, tt := range tests {
@@ -317,9 +322,18 @@ func TestVerifyCertificate(t *testing.T) {
 				return
 			}
 
-			_, err = readCRL([]string{"certify", "-read-crl", caCRLPath}, nil)
+			// replace last element
+			tt.Args = tt.Args[:len(tt.Args)-1]
+			tt.Args = append(tt.Args, crlPath)
+
+			// verify revoked cert
+			err = verifyCertificate(tt.Args)
 			if err != nil {
-				t.Fatal(err)
+				if !strings.Contains(err.Error(), tt.expectedError) {
+					t.Fatalf("got %v, want %v", err, tt.expectedError)
+				}
+				cleanupfiles([]string{caPath, caKeyPath, caCRLPath, crlPath, "nothinux.local.pem", "nothinux.local-key.pem"})
+				return
 			}
 
 			t.Cleanup(func() {
