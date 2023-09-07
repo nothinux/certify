@@ -258,7 +258,7 @@ func getCACert(path string) (*x509.Certificate, error) {
 func readCRLFile(path string) (*x509.RevocationList, error) {
 	f, err := os.ReadFile(path)
 	if err != nil {
-
+		return nil, err
 	}
 
 	return certify.ParseCRL(f)

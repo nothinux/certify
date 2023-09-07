@@ -203,7 +203,7 @@ func verifyCertificate(args []string) error {
 	for _, sn := range crl.RevokedCertificateEntries {
 		if sn.SerialNumber.Cmp(cert.SerialNumber) == 0 {
 			fmt.Printf("%s\ncode: %d\ncertificate revoked at %v\n", cert.Subject.String(), sn.ReasonCode, sn.RevocationTime.Format("2006-01-02 15:04:05"))
-			return nil
+			return fmt.Errorf("error %s verification failed", os.Args[2])
 		}
 	}
 
