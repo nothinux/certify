@@ -255,18 +255,22 @@ func getCACert(path string) (*x509.Certificate, error) {
 	return c, nil
 }
 
+func readCRLFile(path string) (*x509.RevocationList, error) {
+	f, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return certify.ParseCRL(f)
+}
+
 func readCertificateFile(path string) (*x509.Certificate, error) {
 	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := certify.ParseCertificate(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return certify.ParseCertificate(f)
 }
 
 func getPfxData(pkey, cert, caCert, password string) ([]byte, error) {
