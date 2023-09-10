@@ -205,7 +205,7 @@ func TestParseArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			ips, dns, cn, o, expiry, ekus := parseArgs(tt.Args)
+			ips, dns, cn, o, expiry, ekus, _ := parseArgs(tt.Args)
 
 			if len(tt.expectedIP) != 0 {
 				for i, ip := range ips {

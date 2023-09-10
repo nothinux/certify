@@ -20,6 +20,7 @@ Usage of certify:
 certify [flag] [ip-or-dns-san] [cn:default certify] [o: default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
 
 $ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
+$ certify -init cn:web-server o:nothinux crl-nextupdate:100d
 
 Flags:
   -init
@@ -38,7 +39,7 @@ Flags:
 	Verify cert-key.pem and cert.pem has same public key
   -interactive
 	Run certify interactively
-  -revoke <certificate> <crl-file>
+  -revoke <certificate> <crl-file> <next-update:optional>
 	Revoke certificate, the certificate will be added to CRL
   -verify-crl <certificate> <crl-file>
 	Check if the certificate was revoked

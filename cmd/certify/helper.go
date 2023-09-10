@@ -40,7 +40,7 @@ func getKeyIdentifier(publicKey *ecdsa.PublicKey) ([]byte, error) {
 }
 
 func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Result, error) {
-	_, _, cn, org, expiry, _ := parseArgs(args)
+	_, _, cn, org, expiry, _, _ := parseArgs(args)
 
 	ski, err := getKeyIdentifier(&pkey.PublicKey)
 	if err != nil {
@@ -67,8 +67,10 @@ func generateCA(pkey *ecdsa.PrivateKey, args []string, path string) (*certify.Re
 	return caCert, store(caCert.String(), path)
 }
 
-func generateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
-	crl, _, err := certify.CreateCRL(pkey, caCert, nil)
+func generateCRL(args []string, pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
+	_, _, _, _, _, _, nextUpdate := parseArgs(args)
+
+	crl, _, err := certify.CreateCRL(pkey, caCert, nil, nextUpdate)
 	if err != nil {
 		return err
 	}
@@ -77,7 +79,7 @@ func generateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate) error {
 }
 
 func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
-	iplist, dnsnames, cn, org, expiry, ekus := parseArgs(args)
+	iplist, dnsnames, cn, org, expiry, ekus, _ := parseArgs(args)
 
 	var parent *x509.Certificate
 	var parentKey *ecdsa.PrivateKey
@@ -154,7 +156,7 @@ func generateCert(pkey *ecdsa.PrivateKey, args []string) (err error) {
 }
 
 func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
-	_, _, cn, org, expiry, _ := parseArgs(args)
+	_, _, cn, org, expiry, _, _ := parseArgs(args)
 
 	parentKey, err := getCAPrivateKey(caKeyPath)
 	if err != nil {
@@ -201,7 +203,7 @@ func generateIntermediateCert(pkey *ecdsa.PrivateKey, args []string) error {
 // first it will check dnsnames, if nil, then check iplist, if iplist nil too
 // it will check common name
 func getFilename(args []string, key bool) string {
-	iplist, dnsnames, cn, _, _, _ := parseArgs(args)
+	iplist, dnsnames, cn, _, _, _, _ := parseArgs(args)
 
 	var ext string
 	var path string
@@ -335,11 +337,12 @@ func matcher(key, cert string) (string, string, error) {
 }
 
 // parseAltNames returns parsed net.IP, DNS, Common Name, Organization and expiry date in slice format
-func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []x509.ExtKeyUsage) {
+func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []x509.ExtKeyUsage, time.Time) {
 	var iplist []net.IP
 	var dnsnames []string
 	var cn, organization string
 	var expiry time.Time
+	var crlNextUpdate time.Time
 	var ekus []x509.ExtKeyUsage
 
 	for _, arg := range args[1:] {
@@ -357,6 +360,8 @@ func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []
 			expiry = parseExpiry(arg)
 		} else if strings.Contains(arg, "eku:") {
 			ekus = parseEKU(arg)
+		} else if strings.Contains(arg, "crl-nextupdate:") {
+			crlNextUpdate = parseExpiry(arg)
 		} else {
 			dnsnames = append(dnsnames, arg)
 		}
@@ -381,7 +386,7 @@ func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []
 		}
 	}
 
-	return iplist, dnsnames, cn, organization, expiry, ekus
+	return iplist, dnsnames, cn, organization, expiry, ekus, crlNextUpdate
 }
 
 func parseString(ss string) string {

@@ -26,7 +26,7 @@ func initCA(args []string) error {
 
 	fmt.Println("CA certificate file generated", caPath)
 
-	if err := generateCRL(pkey.PrivateKey, caCert.Cert); err != nil {
+	if err := generateCRL(args, pkey.PrivateKey, caCert.Cert); err != nil {
 		return err
 	}
 	fmt.Println("CRL file generated", caCRLPath)
@@ -236,8 +236,10 @@ func revokeCertificate(args []string) (string, error) {
 		return "", err
 	}
 
+	_, _, _, _, _, _, nextUpdate := parseArgs(args)
+
 	fmt.Printf("revoking certificate cn=%s o=%s with serial number %s\n", cert.Subject.CommonName, cert.Subject.Organization, cert.SerialNumber)
-	crl, crlNum, err := certify.RevokeCertificate(crlBytes, cert, caCert, pkey)
+	crl, crlNum, err := certify.RevokeCertificate(crlBytes, cert, caCert, pkey, nextUpdate)
 	if err != nil {
 		return "", err
 	}

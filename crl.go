@@ -19,7 +19,7 @@ type CertRevocationList struct {
 }
 
 // CreateCRL Create certificate revocation list
-func CreateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate, crl *x509.RevocationList) (*CertRevocationList, *big.Int, error) {
+func CreateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate, crl *x509.RevocationList, nextUpdate time.Time) (*CertRevocationList, *big.Int, error) {
 	crlNumber := time.Now().UTC().Format("20060102150405")
 	num, _ := big.NewInt(0).SetString(crlNumber, 10)
 
@@ -31,7 +31,7 @@ func CreateCRL(pkey *ecdsa.PrivateKey, caCert *x509.Certificate, crl *x509.Revoc
 
 	crl.Number = num
 	crl.ThisUpdate = time.Now()
-	crl.NextUpdate = time.Now().Add(96 * time.Hour)
+	crl.NextUpdate = nextUpdate
 
 	crlByte, err := x509.CreateRevocationList(rand.Reader, crl, caCert, pkey)
 	if err != nil {
@@ -63,7 +63,7 @@ func ParseCRL(crl []byte) (*x509.RevocationList, error) {
 	return x509.ParseRevocationList(c.Bytes)
 }
 
-func RevokeCertificate(crl []byte, cert *x509.Certificate, caCert *x509.Certificate, pkey *ecdsa.PrivateKey) (*CertRevocationList, *big.Int, error) {
+func RevokeCertificate(crl []byte, cert *x509.Certificate, caCert *x509.Certificate, pkey *ecdsa.PrivateKey, nextUpdate time.Time) (*CertRevocationList, *big.Int, error) {
 	crlF, err := ParseCRL(crl)
 	if err != nil {
 		return nil, nil, err
@@ -74,7 +74,7 @@ func RevokeCertificate(crl []byte, cert *x509.Certificate, caCert *x509.Certific
 		RevocationTime: time.Now(),
 	})
 
-	return CreateCRL(pkey, caCert, crlF)
+	return CreateCRL(pkey, caCert, crlF, nextUpdate)
 
 }
 
