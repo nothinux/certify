@@ -33,3 +33,15 @@ brews:
       name: homebrew-tools
       branch: main
       token: "{{ .Env.TAP_TOKEN }}"
+    commit_msg_template: "formula update for {{ .ProjectName }} version {{ .Tag }}"
+  - name: "certify@{{ .Env.RELEASE_VERSION }}"
+    homepage: "https://github.com/nothinux/homebrew-tools"
+    folder: Formula
+    description: "Certify is an easy-to-use certificate manager and can be used as an alternative to OpenSSL. With Certify you can create your own private CA (Certificate Authority) and issue certificates with your own CA"
+    license: "MIT"
+    repository:
+      owner: nothinux
+      name: homebrew-tools
+      branch: main
+      token: "{{ .Env.TAP_TOKEN }}"
+    commit_msg_template: "formula update for {{ .ProjectName }} version {{ .Tag }}"
