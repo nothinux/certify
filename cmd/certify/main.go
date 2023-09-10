@@ -39,7 +39,7 @@ Flags:
 	Verify cert-key.pem and cert.pem has same public key
   -interactive
 	Run certify interactively
-  -revoke <certificate> <crl-file> <next-update:optional>
+  -revoke <certificate> <crl-file> <crl-nextupdate:10d(optional)>
 	Revoke certificate, the certificate will be added to CRL
   -verify-crl <certificate> <crl-file>
 	Check if the certificate was revoked

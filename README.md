@@ -9,6 +9,7 @@ Certify is an easy-to-use certificate manager and can be used as an alternative 
 + Show certificate information from file or remote host
 + Export certificate to PKCS12 format
 + Verify private key matches with certificate
++ Revoke certificate
 
 
 ## Installation
@@ -20,36 +21,43 @@ Download in the [release page](https://github.com/nothinux/certify/releases)
  ___ ___ ___| |_|_|  _|_ _ 
 |  _| -_|  _|  _| |  _| | |
 |___|___|_| |_| |_|_| |_  |
-                      |___| Certify v1.5
+                      |___| Certify v1.x
 
 Usage of certify:  
 certify [flag] [ip-or-dns-san] [cn:default certify] [eku:default serverAuth,clientAuth] [expiry:default 8766h s,m,h,d]
 
 $ certify server.local 172.17.0.1 cn:web-server eku:serverAuth expiry:1d
+$ certify -init cn:web-server o:nothinux crl-nextupdate:100d
 
 Flags:
   -init
-        Initialize new root CA Certificate and Key
+	Initialize new root CA Certificate and Key
   -intermediate
-        Generate intermediate certificate
+	Generate intermediate certificate
   -read  <filename>
-        Read certificate information from file server.local.pem
+	Read certificate information from file or stdin
+  -read-crl <filename>
+	Read certificate revocation list from file or stdin
   -connect  <host:443> <tlsver:1.2> <insecure> <with-ca:ca-path>
-        Show certificate information from remote host, use tlsver to set spesific tls version
+	Show certificate information from remote host, use tlsver to set spesific tls version
   -export-p12  <cert> <private-key> <ca-cert>
-        Generate client.p12 pem file containing certificate, private key and ca certificate
+	Generate client.p12 pem file containing certificate, private key and ca certificate
   -match  <private-key> <cert>
-        Verify cert-key.pem and cert.pem has same public key
+	Verify cert-key.pem and cert.pem has same public key
   -interactive
-        Run certify interactively
+	Run certify interactively
+  -revoke <certificate> <crl-file> <crl-nextupdate:10d(optional)>
+	Revoke certificate, the certificate will be added to CRL
+  -verify-crl <certificate> <crl-file>
+	Check if the certificate was revoked
   -version
-        print certify version
+	print certify version
 ```
 
 Create Certificate with CN nothinux and expiry 30 days
 ```
 # create CA
-$ certify init
+$ certify -init cn:nothinux o:nothinux
 
 # create Certificate
 $ certify cn:nothinux expiry:30d
