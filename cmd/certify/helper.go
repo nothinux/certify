@@ -336,7 +336,7 @@ func matcher(key, cert string) (string, string, error) {
 	return comparePublicKey(k, c)
 }
 
-// parseAltNames returns parsed net.IP, DNS, Common Name, Organization and expiry date in slice format
+// parseAltNames returns parsed net.IP, DNS, Common Name, Organization, expiry date, EKU and crl.Nextupdate in slice format
 func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []x509.ExtKeyUsage, time.Time) {
 	var iplist []net.IP
 	var dnsnames []string
@@ -369,6 +369,10 @@ func parseArgs(args []string) ([]net.IP, []string, string, string, time.Time, []
 
 	if expiry.IsZero() {
 		expiry = parseExpiry("expiry:")
+	}
+
+	if crlNextUpdate.IsZero() {
+		crlNextUpdate = parseExpiry("crl-nextupdate:10d")
 	}
 
 	if cn == "" {
