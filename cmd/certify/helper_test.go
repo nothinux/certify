@@ -115,6 +115,7 @@ func TestParseArgs(t *testing.T) {
 		expectedOrganization string
 		expectedExpiry       time.Time
 		expectedEku          []x509.ExtKeyUsage
+		expectedNextUpdate   time.Time
 	}{
 		{
 			Name:                 "Test with ip and dns names",
@@ -201,11 +202,18 @@ func TestParseArgs(t *testing.T) {
 			expectedCN:           "client",
 			expectedOrganization: "certify",
 		},
+		{
+			Name:                 "Test with crl-nextupdate 100d",
+			Args:                 []string{"certify", "crl-nextupdate:100d"},
+			expectedNextUpdate:   time.Now().Add(2400 * time.Hour),
+			expectedCN:           "certify",
+			expectedOrganization: "certify",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			ips, dns, cn, o, expiry, ekus := parseArgs(tt.Args)
+			ips, dns, cn, o, expiry, ekus, nextUpdate := parseArgs(tt.Args)
 
 			if len(tt.expectedIP) != 0 {
 				for i, ip := range ips {
@@ -253,6 +261,16 @@ func TestParseArgs(t *testing.T) {
 
 				if !reflect.DeepEqual(ekus, defaultEku) {
 					t.Fatalf("got %v, want %v", ekus, defaultEku)
+				}
+			}
+
+			if !tt.expectedNextUpdate.IsZero() {
+				if nextUpdate.Unix() != tt.expectedNextUpdate.Unix() {
+					t.Fatalf("got %v, want %v", nextUpdate.Unix(), tt.expectedNextUpdate.Unix())
+				}
+			} else {
+				if nextUpdate.Unix() != time.Now().Add(240*time.Hour).Unix() {
+					t.Fatalf("got %v, want %v", nextUpdate.Unix(), time.Now().Add(240*time.Hour).Unix())
 				}
 			}
 		})
